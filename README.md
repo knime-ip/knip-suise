@@ -12,4 +12,4 @@ The thesis proposes a general Active Segmentation Framework that encompasses thr
 3. Segment Model: The segments derived in the previous step are finally classified and weighted to the effect that desired segments receive a high probability of beeing positive. This allows one to compose the final segmentation by only considering positive segments of high probability and neglecting segments that overlap with other segments of higher probability.
 
 The plugin provides a set of nodes that allows the realization of the aforementioned steps (e.g. the pixel-wise classification, either of boundaries or regions).
-This [workflow] (http://tech.knime.org/files/knimeip/workflows/Example_LarvaTracking.zip) exemplary demonstrates the usage.
+This [workflow] (http://tech.knime.org/files/knimeip/workflows/Example_Supervised Image Segmentation.zip) exemplary demonstrates the usage.
