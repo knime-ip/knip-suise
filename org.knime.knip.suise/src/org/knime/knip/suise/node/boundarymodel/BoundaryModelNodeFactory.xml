@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="" type="Manipulator">
+	<name>Boundary Model</name>
+	<shortDescription>
+		Generates a boundary model from an oriented feature
+		image and given closed contours (i.e. polygons represented as a
+		labeling), and immediately applies it to the image, i.e. assigning to
+		each
+		pixel a probability of beeing a contour pixel or not.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			Generates a boundary model from an oriented feature
+			image and
+			given closed contours (i.e. polygons represented as a labeling), and
+			immediately applies it to the image, i.e. assigning to each
+			pixel a
+			probability of beeing a contour pixel or not. An oriented feature
+			image is a 4-dimensional image (X,Y,F,O) where the additional
+			dimensions define the feature value (F) at a certain
+			orientation/angle (O) for a pixel (X,Y). A oriented feature image can
+			be generated for instance with the Angle-Dependent Pixel Feature
+			2D-node.
+		</intro>
+		<tab name="Parameters">
+			<option name="Selection Strategy">
+				There are multiple strategies to select the
+				positive training
+				instance to build the boundary model.
+				<p>
+					<i>ITERATIVE INFERENCE_SELECTION:</i>
+					Robust and fast method using an heuristic as described in
+					<i>Martin Horn and Michael R. Berthold, Learning Precise Local
+						Boundaries in Images from Human Tracings. In: Image Analysis and
+						Processing – ICIAP 2013, Petrosino, Alfredo, Series Lecture Notes
+						in Computer Science, vol. 8156, pp. 131–140, Springer</i>
+					,
+					<a href="http://dx.doi.org/10.1007/978-3-642-41181-6_14">doi</a>
+				</p>
+				<p>
+					<i>NO SELECTION: </i>
+					No selection of the positive training samples is used. They are
+					taken as defined by the given closed contours in the labeling. This
+					is very likely to lead to unsatisfactory results.
+				</p>
+				<p>
+					<i>CLUSTER SELECTION: </i>
+					Top-down selection heuristic based on clustering as described in
+					<i>Martin Horn and Michael R. Berthold, Towards active segmentation
+						of cell images. In: IEEE International Symposium on Biomedical
+						Imaging: From Nano to Macro, pp. 177–181, IEEE, 2011.</i>
+					Quite slow.
+				</p>
+				<p>
+					<i>INTERVAL RULE INDUCTION: </i>
+					Bottom-up selection heuristic by successively extending interval
+					rules. Quite slow.
+				</p>
+			</option>
+			<option name="Classifier">WEKA classifier and the final boundary model.
+				Used assign the boundary-probability to each pixel.</option>
+			<option name="Dimenion labels">The name of the dimension that should be regarded
+				as feature- and orientation-dimension.
+			</option>
+			<option name="Optional Parameters">Additional parameters for the selection
+				strategies. Provided as a list of "key=value"-pairs. Available
+				parameters are stdev (standard deviation of for the ITERATIVE
+				INFERENCE SELECTION) and bias (needed for the CLUSTER SELECTION and
+				the INTERVAL RULE INDUCTION).</option>
+		</tab>
+		<tab name="Apply (optional)">
+			<option name="Target images">Image column within the optional table at the
+				second input-port to whose images the boundary model will be
+				applied, too (i.e. the pixels will be classified). These feature
+				images are
+				NOT used to create the boundary model.
+			</option>
+		</tab>
+		<tab name="Debug">
+			<option name="Source images">Optional image column containing 2D-images used
+				for debugging purposes. The images will be used to show parts of
+				them unfolded along the given closed contours making up the training
+				data for the boundary model.</option>
+		</tab>
+			<tab name="Column Selection">
+			<option name="Column Creation Mode">
+				Mode how to handle the selected column. The
+				processed column can be
+				added to a new table, appended to the end of
+				the table, or the old
+				column can be replaced by the new result</option>
+			<option name="Column suffix">
+				A suffix appended to the column name. If "Append"
+				is not selected, it
+				can be left empty.</option>
+			<option name="Column Selection">
+				Selection of the columns to be processed.</option>
+		</tab>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Feature images and closed contours">
+			The oriented feature images and
+			labelings containing the closed contours.
+		</inPort>
+		<inPort index="1" name="Feature images">Optional port containing feature images
+			that pixels will be classified (but not used to the model creation)</inPort>
+		<outPort index="0" name="Boundary maps">
+			A list of images representing the
+			boundary maps where the pixel values represent the likelihood of
+			being a contour pixel. One boundary map is created for each given
+			closed contour. Use for instance the "Split Collection Column" to
+			ungroup the
+			result images.
+		</outPort>
+	</ports>
+	
+	<views>
+		<view name="Debug" index="0">View to get a glance on the training
+			data used to
+			create the boundary model and how the instance selection
+			worked. Will only show some useful if a source image column in the
+			"Debug"-tab has been selected.</view>
+	</views>
+
+	
+</knimeNode>

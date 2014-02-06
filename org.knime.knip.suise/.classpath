@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="lib" path="lib/weka.jar" sourcepath="lib/weka-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/ij-1.48f.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/Trainable_Segmentation-2.0.0-SNAPSHOT.jar" sourcepath="/home/hornm/workspaces/eclipse/workspace_indigo/fiji/src-plugins/Trainable_Segmentation/src"/>
+	<classpathentry exported="true" kind="lib" path="lib/imagescience-2.4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/Stitching_-2.0.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/VIB-lib-2.0.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/edu_mines_jtk.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/multiInstanceFilters.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/multiInstanceLearning.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/Anisotropic_Diffusion_2D-2.0.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/legacy-imglib1-2.0.0-SNAPSHOT.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

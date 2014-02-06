@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="" type="Manipulator">
+	<name>Angle-Dependent Pixel Features 2D</name>
+	<shortDescription>
+		Node to calculate angle-dependent pixel features.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			Node to calculate angle-dependent pixel features. The pixel
+			features are
+			represented in a feature image with two additional
+			dimensions: one
+			for the features and the other for the orientations
+			(angles). Hence each pixel (X,Y) has a specific value for a certain
+			feature (F) and a certain angle/orientation (O).
+			In conjunction with
+			polygons (represented by a labeling) these features can be used to
+			create a boundary model (with the according node).
+		</intro>
+		<tab name="Features">
+			<option name="Gabor feature set">Gabor filters of the given radius are convolved
+				with the source image for the specified number of orientations. Each
+				combination of the parameters scales, frequencies and elongations
+				(comma separated list of real numbers) is a new "point" in the
+				feature dimenion (for the given number of orientations).
+			</option>
+			<option name="Line feature set">For the given number of orientations all the
+				pixel values along a line through a pixel a considered as a
+				individual feature. Hence, a radius of 10 leads to 2*10+1 features
+				for the specified number of orientations.</option>
+		</tab>
+		<tab name="Additional settings">
+			<option name="Number of orientations">The features are calculated for the specifed
+				number of orientations, equally distributed over 360°.</option>
+			<option name="Orientation dimension label">The label/name of dimension representating the
+				orientations in the result image.</option>
+			<option name="Feature dimension label">The label/name of dimension representating the
+				features in the result image.</option>
+		</tab>
+		<tab name="Column Selection">
+			<option name="Column Creation Mode">
+				Mode how to handle the selected column. The
+				processed column can be
+				added to a new table, appended to the end of
+				the table, or the old
+				column can be replaced by the new result</option>
+			<option name="Column suffix">
+				A suffix appended to the column name. If "Append"
+				is not selected, it
+				can be left empty.</option>
+			<option name="Column Selection">
+				Selection of the columns to be processed.</option>
+		</tab>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Image">
+			The image data.
+		</inPort>
+		<outPort index="0" name="Feature image">
+			The "oriented" feature image with an
+			additional feature- and orientation-dimension.
+		</outPort>
+	</ports>
+	<views>
+		<view name="Table Cell Viewer" index="0">Allows a detailed inspection
+			of the result images.</view>
+	</views>
+</knimeNode>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="" type="Manipulator">
+	<name>Level CCA</name>
+	<shortDescription>
+		Thresholdes the input images at multiple levels and
+		performs a connected component analysis for each. The result is a
+		labeling presumably with many overlapping segments.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			Thresholdes the input images at multiple levels and
+			performs a
+			connected component analysis for each. The result is a
+			labeling
+			presumbly with many overlapping segments. If two subsequent
+			threshold
+			levels would result in the same connected components (i.e.
+			the binary
+			images are equal) one of them will be neglected and not added twice.
+		</intro>
+		<tab name="Options">
+			<option name="Connection Type">
+				Neighborhood definition.
+				<ul>
+					<li>FOUR_CONNECTED: These pixels are connected along one of the
+						primary axes.</li>
+					<li>EIGHT_CONNECTED: These pixels are connected along either one,
+						two, or all of the primary axes.</li>
+				</ul>
+			</option>
+			<option name="White background">If checked, the pixel value above (i.e. the white
+				pixels in a binary image) the considered
+				threshold are regarded as
+				background.</option>
+		</tab>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Images">
+			The images.
+		</inPort>
+		<outPort index="0" name="Labelings">
+			The result labelings resulting the
+			(presumably numerous and highly overlapping) segments.
+		</outPort>
+	</ports>
+</knimeNode>

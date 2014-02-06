@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+     <extension
+           point="org.knime.workbench.repository.categories">
+        <category
+              level-id="suise"
+              name="Supervised Image Segmentation"
+              path="/community/knip">
+        </category>
+     </extension>
+     <extension
+           point="org.knime.workbench.repository.nodesets">
+        <nodeset
+              default-category-icon="icons/default.png"
+              expert-flag="false"
+              factory-class="org.knime.knip.suise.node.SuiseNodeSetFactory"
+              id="org.knime.knip.suise.node.SuiseNodeSetFactory">
+        </nodeset>
+     </extension>
+</plugin>

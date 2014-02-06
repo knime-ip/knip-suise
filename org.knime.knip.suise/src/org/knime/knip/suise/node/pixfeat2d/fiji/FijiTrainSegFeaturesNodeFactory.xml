@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="" type="Manipulator">
+	<name>Fiji Trainable Segmentation Features 2D</name>
+	<shortDescription>
+		Feature offered by the Fiji "Trainable Weka
+		Segmentation"-plugin,
+		see
+		http://fiji.sc/Trainable_Weka_Segmentation#Training_features.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			Features offered by the Fiji "Trainable Weka
+			Segmentation"-plugin,
+			see
+			http://fiji.sc/Trainable_Weka_Segmentation#Training_features. The
+			node adds to every input image an additional dimension containing the
+			selected features. Please note that the input image must have exactly
+			2 dimensions and will be skipped if not.
+		</intro>
+		<tab name="Options">
+			<option name="Features">Select the features here to be calculated. One
+				entry in the list not necessarily adds exactly one additional plane
+				to the resulting feature image. Some might add more. A more detailed
+				description of the features and the parameters can be found at
+				http://fiji.sc/Trainable_Weka_Segmentation#Training_features.
+			</option>
+			<option name="Multi-threaded">If checked, the features will be calculated in a
+				multithreaded, i.e. parallel, manner.</option>
+			<option name="Feature dimension label">The label of the dimension to be added to the
+				input images. For further processing please make sure that the
+				dimenion label is available in the according dialogs by adding it in
+				the preferences of the Image Processing Extension.
+			</option>
+		</tab>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Image">
+			The image data.
+		</inPort>
+		<outPort index="0" name="Feature image">
+			The feature images. Please note that
+			normalization might be necessary (e.g. in the Table Cell View) to
+			make to feature images visible.
+		</outPort>
+	</ports>
+</knimeNode>
