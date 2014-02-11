@@ -66,7 +66,6 @@ import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -74,11 +73,6 @@ import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 
-/**
- * TODO Auto-generated 
- * 
- * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
- */
 import weka.classifiers.Classifier;
 import weka.classifiers.trees.j48.Distribution;
 import weka.core.Instance;
@@ -183,7 +177,6 @@ public class WekaClassifierPortObject implements PortObject {
         ObjectInputStream oi = null;
         Classifier classifier = null;
         Instances trainInstances = null;
-        ModelContentRO model = null;
 
         try {
             // load classifier
@@ -235,7 +228,6 @@ public class WekaClassifierPortObject implements PortObject {
         // }
         assert (classifier != null);
         assert (trainInstances != null);
-        assert (model != null);
 
         // DataCellStringMapper mapper = null;
         // try {
