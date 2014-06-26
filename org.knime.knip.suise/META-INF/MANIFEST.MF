@@ -5,14 +5,14 @@ Bundle-ManifestVersion: 2
 Bundle-Version: 0.1.0.qualifier
 Bundle-Vendor: Martin Horn, University of Konstanz
 Eclipse-RegisterBuddy: org.knime.core
-Require-Bundle: org.knime.base;bundle-version="[2.8.0,3.0.0)",
- org.knime.workbench.repository,
+Require-Bundle: org.knime.base;bundle-version="2.10.0",
+ org.knime.workbench.repository;bundle-version="2.10.0",
  org.apache.log4j;bundle-version="1.2.15",
  org.eclipse.core.runtime,
  org.eclipse.ui,
- org.knime.knip.base;bundle-version="1.1.1",
- org.knime.knip.core;bundle-version="1.1.1"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+ org.knime.knip.base;bundle-version="1.2.0",
+ org.knime.knip.core;bundle-version="1.2.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/weka.jar,
  knip_suise.jar,
  lib/ij-1.48f.jar,
