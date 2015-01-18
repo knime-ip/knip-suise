@@ -50,10 +50,10 @@ package org.knime.knip.suise.node.levelcca;
 
 import java.util.List;
 
+import net.imagej.ImgPlus;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.Labeling;
 import net.imglib2.labeling.NativeImgLabeling;
-import net.imglib2.meta.ImgPlus;
 import net.imglib2.ops.operation.randomaccessibleinterval.unary.regiongrowing.AbstractRegionGrowing;
 import net.imglib2.ops.types.ConnectedType;
 import net.imglib2.type.NativeType;

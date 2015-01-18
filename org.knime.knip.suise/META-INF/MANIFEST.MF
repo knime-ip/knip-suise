@@ -11,7 +11,16 @@ Require-Bundle: org.knime.base;bundle-version="2.10.0",
  org.eclipse.core.runtime,
  org.eclipse.ui,
  org.knime.knip.base;bundle-version="1.2.0",
- org.knime.knip.core;bundle-version="1.2.0"
+ org.knime.knip.core;bundle-version="1.2.0",
+ imglib2;bundle-version="2.2.0",
+ imglib2-roi;bundle-version="0.2.1",
+ imagej-common;bundle-version="0.12.0",
+ knip-imglib2-ops;bundle-version="0.1.4",
+ scijava-common;bundle-version="2.36.0",
+ ij;bundle-version="1.49.0",
+ imglib2-ij;bundle-version="2.0.0",
+ org.apache.commons.math3;bundle-version="3.2.0",
+ scijava-log-slf4j;bundle-version="1.0.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/weka.jar,
  knip_suise.jar,

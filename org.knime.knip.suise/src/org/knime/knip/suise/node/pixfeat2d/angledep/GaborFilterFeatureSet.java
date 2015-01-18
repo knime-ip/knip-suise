@@ -51,7 +51,6 @@ package org.knime.knip.suise.node.pixfeat2d.angledep;
 import java.util.concurrent.ExecutorService;
 
 import net.imglib2.Cursor;
-import net.imglib2.Pair;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
@@ -71,6 +70,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexDoubleType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Pair;
 import net.imglib2.view.Views;
 
 import org.knime.core.node.KNIMEConstants;

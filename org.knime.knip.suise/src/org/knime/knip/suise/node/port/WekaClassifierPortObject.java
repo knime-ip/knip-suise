@@ -52,6 +52,7 @@ import java.awt.GridLayout;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.zip.ZipEntry;
 
 import javax.swing.BorderFactory;
@@ -60,7 +61,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.apache.mahout.math.Arrays;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;

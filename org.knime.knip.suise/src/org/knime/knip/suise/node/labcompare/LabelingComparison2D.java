@@ -57,10 +57,10 @@ import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.NativeImgLabeling;
-import net.imglib2.sampler.special.ConstantRandomAccessible;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.util.ConstantUtils;
 
 /**
  * Compares two different images represented by their segmented components (a
@@ -382,7 +382,7 @@ public class LabelingComparison2D<L extends Comparable<L>, T extends IntegerType
                             binaryMask(m_lab1
                                     .getIterableRegionOfInterest(label)
                                     .getIterableIntervalOverROI(
-                                            new ConstantRandomAccessible<BitType>(
+                                           ConstantUtils.constantRandomAccessible(
                                                     new BitType(), 2)));
                     segments1[maxIndexSeg1].offset = new long[2];
                     m_lab1.getExtents(label, segments1[maxIndexSeg1].offset,
@@ -398,7 +398,7 @@ public class LabelingComparison2D<L extends Comparable<L>, T extends IntegerType
                             binaryMask(m_lab2
                                     .getIterableRegionOfInterest(label)
                                     .getIterableIntervalOverROI(
-                                            new ConstantRandomAccessible<BitType>(
+                                    		ConstantUtils.constantRandomAccessible(
                                                     new BitType(), 2)));
                     segments2[maxIndexSeg2].offset = new long[2];
                     m_lab2.getExtents(label, segments2[maxIndexSeg2].offset,

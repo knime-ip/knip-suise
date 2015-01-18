@@ -57,7 +57,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import net.imglib2.Pair;
+import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
 import org.knime.knip.core.util.PermutationSort;

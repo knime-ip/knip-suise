@@ -49,6 +49,7 @@
 package org.knime.knip.suise.ops;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +67,6 @@ import net.imglib2.outofbounds.OutOfBoundsBorder;
 import net.imglib2.roi.RectangleRegionOfInterest;
 import net.imglib2.type.numeric.RealType;
 
-import org.apache.mahout.math.Arrays;
 import org.knime.core.node.NodeLogger;
 
 import weka.core.Attribute;
@@ -81,148 +81,146 @@ import weka.core.Instances;
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
 public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
-        implements BinaryOutputOperation<Labeling<L>, Img<T>, Instances> {
+		implements BinaryOutputOperation<Labeling<L>, Img<T>, Instances> {
 
-    private final int[] m_dimIndices;
+	private final int[] m_dimIndices;
 
-    private final int m_featDim;
+	private final int m_featDim;
 
-    private final List<String> m_classLabels;
+	private final List<String> m_classLabels;
 
-    private final double m_samplingRate;
+	private final double m_samplingRate;
 
-    private final boolean m_balanceInstancePerClass;
+	private final boolean m_balanceInstancePerClass;
 
-    public BuildTrainingData(List<String> classLabels, int[] dimIndices,
-            int featDim, double samplingRate, boolean balanceInstancePerClass) {
-        m_classLabels = classLabels;
-        m_dimIndices = dimIndices;
-        m_featDim = featDim;
-        m_samplingRate = samplingRate;
-        m_balanceInstancePerClass = balanceInstancePerClass;
+	public BuildTrainingData(List<String> classLabels, int[] dimIndices,
+			int featDim, double samplingRate, boolean balanceInstancePerClass) {
+		m_classLabels = classLabels;
+		m_dimIndices = dimIndices;
+		m_featDim = featDim;
+		m_samplingRate = samplingRate;
+		m_balanceInstancePerClass = balanceInstancePerClass;
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Instances compute(Labeling<L> lab, Img<T> img, Instances r) {
-        Random rand = new Random();
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Instances compute(Labeling<L> lab, Img<T> img, Instances r) {
+		Random rand = new Random();
 
-        double[] extent = new double[lab.numDimensions()];
-        for (int d = 0; d < m_dimIndices.length; d++) {
-            extent[m_dimIndices[d]] = lab.max(m_dimIndices[d]);
-        }
-        RectangleRegionOfInterest roi =
-                new RectangleRegionOfInterest(new double[lab.numDimensions()],
-                        extent);
+		double[] extent = new double[lab.numDimensions()];
+		for (int d = 0; d < m_dimIndices.length; d++) {
+			extent[m_dimIndices[d]] = lab.max(m_dimIndices[d]);
+		}
+		RectangleRegionOfInterest roi = new RectangleRegionOfInterest(
+				new double[lab.numDimensions()], extent);
 
-        Cursor<LabelingType<L>> labCur =
-                roi.getIterableIntervalOverROI(lab).localizingCursor();
-        OutOfBounds<T> imgRA = new OutOfBoundsBorder<T>(img);
+		Cursor<LabelingType<L>> labCur = roi.getIterableIntervalOverROI(lab)
+				.localizingCursor();
+		OutOfBounds<T> imgRA = new OutOfBoundsBorder<T>(img);
 
-        // get the class distributions
-        Map<L, Double> classDistr = null;
-        if (m_balanceInstancePerClass) {
-            long sum = 0;
-            long area;
-            Collection<L> labels = lab.getLabels();
-            classDistr = new HashMap<L, Double>(labels.size());
-            for (L label : labels) {
-                area = lab.getArea(label);
-                sum += area;
-                lab.getArea(label);
-                classDistr.put(label, new Double(area));
-            }
-            // determine the new sampling rate for each class individually
-            double instancesPerClass = (double)sum / (double)labels.size();
-            for (L label : labels) {
-                Double sampleRate =
-                        instancesPerClass / classDistr.get(label)
-                                * m_samplingRate;
-                classDistr.put(label, sampleRate);
-            }
-        }
+		// get the class distributions
+		Map<L, Double> classDistr = null;
+		if (m_balanceInstancePerClass) {
+			long sum = 0;
+			long area;
+			Collection<L> labels = lab.getLabels();
+			classDistr = new HashMap<L, Double>(labels.size());
+			for (L label : labels) {
+				area = lab.getArea(label);
+				sum += area;
+				lab.getArea(label);
+				classDistr.put(label, new Double(area));
+			}
+			// determine the new sampling rate for each class individually
+			double instancesPerClass = (double) sum / (double) labels.size();
+			for (L label : labels) {
+				Double sampleRate = instancesPerClass / classDistr.get(label)
+						* m_samplingRate;
+				classDistr.put(label, sampleRate);
+			}
+		}
 
-        long[] tmpPos = new long[imgRA.numDimensions()];
-        while (labCur.hasNext()) {
-            labCur.fwd();
-            for (int d = 0; d < m_dimIndices.length; d++) {
-                imgRA.setPosition(labCur.getLongPosition(m_dimIndices[d]),
-                        m_dimIndices[d]);
-                if (imgRA.isOutOfBounds()) {
-                    imgRA.localize(tmpPos);
-                    NodeLogger.getLogger(getClass()).warn(
-                            "Labeling reaches beyond the feature image. Position "
-                                    + Arrays.toString(tmpPos) + " skipped.");
-                    continue;
-                }
+		long[] tmpPos = new long[imgRA.numDimensions()];
+		while (labCur.hasNext()) {
+			labCur.fwd();
+			for (int d = 0; d < m_dimIndices.length; d++) {
+				imgRA.setPosition(labCur.getLongPosition(m_dimIndices[d]),
+						m_dimIndices[d]);
+				if (imgRA.isOutOfBounds()) {
+					imgRA.localize(tmpPos);
+					NodeLogger.getLogger(getClass()).warn(
+							"Labeling reaches beyond the feature image. Position "
+									+ Arrays.toString(tmpPos) + " skipped.");
+					continue;
+				}
 
-            }
-            if (!labCur.get().getLabeling().isEmpty()) {
+			}
+			if (!labCur.get().getLabeling().isEmpty()) {
 
-                if (m_balanceInstancePerClass) {
-                    if (rand.nextDouble() >= classDistr.get(labCur.get()
-                            .getLabeling().get(0))) {
-                        continue;
-                    }
-                } else {
-                    if (rand.nextDouble() >= m_samplingRate) {
-                        continue;
-                    }
-                }
+				if (m_balanceInstancePerClass) {
+					if (rand.nextDouble() >= classDistr.get(labCur.get()
+							.getLabeling().get(0))) {
+						continue;
+					}
+				} else {
+					if (rand.nextDouble() >= m_samplingRate) {
+						continue;
+					}
+				}
 
-                double[] featVec = new double[(int)img.dimension(m_featDim)];
-                for (int f = 0; f < img.dimension(m_featDim); f++) {
-                    imgRA.setPosition(f, m_featDim);
-                    featVec[f] = imgRA.get().getRealDouble();
-                }
-                for (L classLabel : labCur.get().getLabeling()) {
-                    Instance instance = new DenseInstance(1.0, featVec);
-                    instance.insertAttributeAt(instance.numAttributes());
-                    instance.setDataset(r);
-                    instance.setClassValue(classLabel.toString());
+				double[] featVec = new double[(int) img.dimension(m_featDim)];
+				for (int f = 0; f < img.dimension(m_featDim); f++) {
+					imgRA.setPosition(f, m_featDim);
+					featVec[f] = imgRA.get().getRealDouble();
+				}
+				for (L classLabel : labCur.get().getLabeling()) {
+					Instance instance = new DenseInstance(1.0, featVec);
+					instance.insertAttributeAt(instance.numAttributes());
+					instance.setDataset(r);
+					instance.setClassValue(classLabel.toString());
 
-                    r.add(instance);
+					r.add(instance);
 
-                }
-            }
-        }
-        return r;
-    }
+				}
+			}
+		}
+		return r;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public BinaryOutputOperation<Labeling<L>, Img<T>, Instances> copy() {
-        return new BuildTrainingData<L, T>(m_classLabels, m_dimIndices,
-                m_featDim, m_samplingRate, m_balanceInstancePerClass);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public BinaryOutputOperation<Labeling<L>, Img<T>, Instances> copy() {
+		return new BuildTrainingData<L, T>(m_classLabels, m_dimIndices,
+				m_featDim, m_samplingRate, m_balanceInstancePerClass);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public BinaryObjectFactory<Labeling<L>, Img<T>, Instances> bufferFactory() {
-        return new BinaryObjectFactory<Labeling<L>, Img<T>, Instances>() {
+	/**
+	 * {@inheritDoc}
+	 */
+	public BinaryObjectFactory<Labeling<L>, Img<T>, Instances> bufferFactory() {
+		return new BinaryObjectFactory<Labeling<L>, Img<T>, Instances>() {
 
-            @Override
-            public Instances instantiate(Labeling<L> inputA, Img<T> inputB) {
-                // build training set
-                ArrayList<Attribute> attr = new ArrayList<Attribute>();
-                for (int a = 0; a < inputB.dimension(m_featDim); a++) {
-                    attr.add(new Attribute("attr" + a));
-                }
-                Instances instances =
-                        new Instances("data", attr, m_classLabels.size() * 20);
+			@Override
+			public Instances instantiate(Labeling<L> inputA, Img<T> inputB) {
+				// build training set
+				ArrayList<Attribute> attr = new ArrayList<Attribute>();
+				for (int a = 0; a < inputB.dimension(m_featDim); a++) {
+					attr.add(new Attribute("attr" + a));
+				}
+				Instances instances = new Instances("data", attr,
+						m_classLabels.size() * 20);
 
-                instances.insertAttributeAt(new Attribute("class",
-                        m_classLabels), instances.numAttributes());
-                instances.setClassIndex(instances.numAttributes() - 1);
-                return instances;
-            }
+				instances.insertAttributeAt(new Attribute("class",
+						m_classLabels), instances.numAttributes());
+				instances.setClassIndex(instances.numAttributes() - 1);
+				return instances;
+			}
 
-        };
-    }
+		};
+	}
 }

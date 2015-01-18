@@ -51,9 +51,9 @@ package org.knime.knip.suise.node.labcompare;
 import java.io.File;
 import java.io.IOException;
 
+import net.imagej.ImgPlus;
 import net.imglib2.img.Img;
 import net.imglib2.labeling.Labeling;
-import net.imglib2.meta.ImgPlus;
 import net.imglib2.type.numeric.integer.ByteType;
 
 import org.knime.core.data.DataCell;

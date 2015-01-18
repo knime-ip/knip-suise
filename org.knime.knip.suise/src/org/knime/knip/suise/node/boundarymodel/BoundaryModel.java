@@ -74,10 +74,10 @@ import net.imglib2.ops.img.UnaryConstantRightAssignment;
 import net.imglib2.ops.operation.real.binary.RealCopyLeft;
 import net.imglib2.outofbounds.OutOfBoundsConstantValueFactory;
 import net.imglib2.roi.IterableRegionOfInterest;
-import net.imglib2.sampler.special.ConstantRandomAccessible;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.util.ConstantUtils;
 import net.imglib2.view.Views;
 
 import org.knime.knip.core.awt.ColorLabelingRenderer;
@@ -102,6 +102,7 @@ import org.knime.knip.suise.node.boundarymodel.contourdata.VectorDataListImpl;
 import org.knime.knip.suise.node.boundarymodel.contourdata.WekaContourDataClassifier;
 import org.knime.knip.suise.node.boundarymodel.contourdata.WekaMIContourDataClassifier;
 import org.knime.knip.suise.node.pixfeat2d.angledep.BufferedPixelFeatureSet;
+
 
 /**
  * TODO Auto-generated 
@@ -397,7 +398,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 
         // roi iterable interval
         IterableInterval<BitType> ii =
-                roi.getIterableIntervalOverROI(new ConstantRandomAccessible<BitType>(
+                roi.getIterableIntervalOverROI(ConstantUtils.constantRandomAccessible(
                         new BitType(), roi.numDimensions()));
 
         // create bitmask

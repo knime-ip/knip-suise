@@ -51,7 +51,6 @@ package org.knime.knip.suise.node.boundarymodel.contourdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import net.imglib2.Pair;
 import net.imglib2.RandomAccess;
 import net.imglib2.exception.IncompatibleTypeException;
 import net.imglib2.img.Img;
@@ -65,6 +64,7 @@ import net.imglib2.ops.operation.iterableinterval.unary.MinMax;
 import net.imglib2.ops.operation.real.unary.Normalize;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Pair;
 
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.optimization.fitting.CurveFitter;
