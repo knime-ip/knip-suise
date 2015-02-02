@@ -7,7 +7,6 @@ Bundle-Vendor: Martin Horn, University of Konstanz
 Eclipse-RegisterBuddy: org.knime.core
 Require-Bundle: org.knime.base;bundle-version="2.10.0",
  org.knime.workbench.repository;bundle-version="2.10.0",
- org.apache.log4j;bundle-version="1.2.15",
  org.eclipse.core.runtime,
  org.eclipse.ui,
  org.knime.knip.base;bundle-version="1.2.0",
@@ -20,7 +19,9 @@ Require-Bundle: org.knime.base;bundle-version="2.10.0",
  imglib2-ij;bundle-version="2.0.0",
  org.apache.commons.math3;bundle-version="3.2.0",
  scijava-log-slf4j;bundle-version="1.0.2",
- knip-tmp-imglib2-ops;bundle-version="0.1.4"
+ knip-tmp-imglib2-ops;bundle-version="0.1.4",
+ slf4j-api;bundle-version="1.7.10",
+ slf4j-log4j12;bundle-version="1.7.10"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/weka.jar,
  knip_suise.jar,
