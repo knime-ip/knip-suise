@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./default.png" type="Source">
+	<name>Extract Regions from UCM</name>
+
+	<shortDescription>
+		Extracts the regions from an ultra-metric contour map
+		(UCM).
+	</shortDescription>
+
+	<fullDescription>
+		<intro>Extracts the regions from an ultra-metric contour map (UCM) by
+			thresholding it at each available intensity level and performing a
+			connected component analysis on each of them.</intro>
+
+
+		<option name="minimum number of boundary pixels">Regions with less boundary pixels will be skipped.</option>
+		<option name="minimum pixel intensity">Regions with a boundary intensity less then
+			specified will be skipped.</option>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Image column">Columns containing the UCM.</inPort>
+	</ports>	
+</knimeNode>
