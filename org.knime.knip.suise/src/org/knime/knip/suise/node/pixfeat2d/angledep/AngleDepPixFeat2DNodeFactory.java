@@ -85,7 +85,7 @@ public class AngleDepPixFeat2DNodeFactory<T extends RealType<T>, F extends RealT
      */
     @Override
     protected int getMaxNumOrientations() {
-        return 12;
+        return Integer.MAX_VALUE;
     }
 
 }
