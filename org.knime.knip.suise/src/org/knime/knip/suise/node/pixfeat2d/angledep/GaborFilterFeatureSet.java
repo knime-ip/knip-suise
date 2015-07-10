@@ -75,11 +75,11 @@ import net.imglib2.view.Views;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.knip.base.KNIPConstants;
-import org.knime.knip.base.ThreadPoolExecutorService;
+import org.knime.knip.core.KNIPGateway;
+import org.knime.knip.core.ThreadPoolExecutorService;
 import org.knime.knip.core.algorithm.convolvers.Convolver;
 import org.knime.knip.core.algorithm.convolvers.ImgLib2FourierConvolver;
 import org.knime.knip.core.algorithm.convolvers.filter.linear.Gabor;
-import org.knime.knip.core.util.ImgUtils;
 import org.knime.knip.suise.data.feat.Dart;
 import org.knime.knip.suise.data.feat.FeatImgGenerator;
 import org.knime.knip.suise.data.feat.PixFeatureSet;
@@ -416,8 +416,8 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 			String name = m_names[i % (m_filters.length / m_halfNumAng)]
 					+ "angIdx:" + angIdx + ";ang:" + ang;
 
-			Img<FloatType> floatImg = ImgUtils.createEmptyCopy(img,
-					new FloatType());
+			Img<FloatType> floatImg = (Img<FloatType>) KNIPGateway.ops()
+					.createImg(img, new FloatType());
 			new ImgConvert<DoubleType, FloatType>(new DoubleType(),
 					new FloatType(), ImgConvert.ImgConversionTypes.DIRECT,
 					floatImg.factory()).compute(img, floatImg);

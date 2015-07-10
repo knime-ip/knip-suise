@@ -52,13 +52,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.knime.knip.core.KNIPGateway;
+
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.labeling.Labeling;
-import net.imglib2.labeling.LabelingType;
-import net.imglib2.labeling.NativeImgLabeling;
+import net.imglib2.roi.labeling.ImgLabeling;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 
@@ -68,199 +70,198 @@ import net.imglib2.type.numeric.integer.IntType;
  */
 public abstract class ContourDataExtractor extends AbstractVectorDataList {
 
-    private ContourDataGrid m_cDataGrid;
+	private ContourDataGrid m_cDataGrid;
 
-    private int[] m_translations;
+	private int[] m_translations;
 
-    private int[] m_permutation;
+	private int[] m_permutation;
 
-    protected int CENTER_COL;
+	protected int CENTER_COL;
 
-    /**
+	/**
      * 
      */
-    public void extractContourData(ContourDataGrid cDataGrid) {
-        m_cDataGrid = cDataGrid;
-        CENTER_COL = cDataGrid.width() / 2;
-        m_translations = new int[cDataGrid.totalLength()];
-        m_permutation = new int[cDataGrid.totalLength()];
-        for (int i = 0; i < m_permutation.length; i++) {
-            m_permutation[i] = i;
-        }
-        extractContourData(m_translations, m_permutation);
-    }
+	public void extractContourData(ContourDataGrid cDataGrid) {
+		m_cDataGrid = cDataGrid;
+		CENTER_COL = cDataGrid.width() / 2;
+		m_translations = new int[cDataGrid.totalLength()];
+		m_permutation = new int[cDataGrid.totalLength()];
+		for (int i = 0; i < m_permutation.length; i++) {
+			m_permutation[i] = i;
+		}
+		extractContourData(m_translations, m_permutation);
+	}
 
-    /**
-     * @return
-     */
-    protected ContourDataGrid contourDataGrid() {
-        return m_cDataGrid;
-    }
+	/**
+	 * @return
+	 */
+	protected ContourDataGrid contourDataGrid() {
+		return m_cDataGrid;
+	}
 
-    /**
-     * @param cDataGrid
-     * @param translations
-     * @param permutation
-     */
-    protected abstract void extractContourData(int[] translations,
-            int[] permutation);
+	/**
+	 * @param cDataGrid
+	 * @param translations
+	 * @param permutation
+	 */
+	protected abstract void extractContourData(int[] translations,
+			int[] permutation);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double[] getVector(int idx) {
-        return m_cDataGrid.get(idx, CENTER_COL + m_translations[idx]);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double[] getVector(int idx) {
+		return m_cDataGrid.get(idx, CENTER_COL + m_translations[idx]);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int numVectors() {
-        return m_cDataGrid.totalLength();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int numVectors() {
+		return m_cDataGrid.totalLength();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int numFeatures() {
-        return m_cDataGrid.numFeatures();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int numFeatures() {
+		return m_cDataGrid.numFeatures();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Iterator<double[]> iterator() {
-        List<double[]> tmp = new ArrayList<double[]>(numVectors());
-        for (int i = 0; i < numVectors(); i++) {
-            tmp.add(getVector(i));
-        }
-        return tmp.iterator();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterator<double[]> iterator() {
+		List<double[]> tmp = new ArrayList<double[]>(numVectors());
+		for (int i = 0; i < numVectors(); i++) {
+			tmp.add(getVector(i));
+		}
+		return tmp.iterator();
+	}
 
-    /**
-     * @return the number of samples included
-     */
-    public int numSamples() {
-        return m_cDataGrid.numSamples();
-    }
+	/**
+	 * @return the number of samples included
+	 */
+	public int numSamples() {
+		return m_cDataGrid.numSamples();
+	}
 
-    /**
-     * @param sampleIdx
-     * @return the length of the sample
-     */
-    public int getSampleLength(int sampleIdx) {
-        return m_cDataGrid.getSampleLength(sampleIdx);
-    }
+	/**
+	 * @param sampleIdx
+	 * @return the length of the sample
+	 */
+	public int getSampleLength(int sampleIdx) {
+		return m_cDataGrid.getSampleLength(sampleIdx);
+	}
 
-    /**
-     * @param sampleIdx
-     * @return the accumulated length of all the samples to the specified sample
-     *         index (without the sample of <code>sampleIdx</code> itself!)
-     */
-    public int getAccumulatedSampleLength(int sampleIdx) {
-        return m_cDataGrid.getAccumulatedSampleLength(sampleIdx);
-    }
+	/**
+	 * @param sampleIdx
+	 * @return the accumulated length of all the samples to the specified sample
+	 *         index (without the sample of <code>sampleIdx</code> itself!)
+	 */
+	public int getAccumulatedSampleLength(int sampleIdx) {
+		return m_cDataGrid.getAccumulatedSampleLength(sampleIdx);
+	}
 
-    /**
-     * @param rowIdx
-     * @return the sample index to the global row index
-     */
-    public int getSampleIndex(int rowIdx) {
-        return m_cDataGrid.getSampleIndex(rowIdx);
-    }
+	/**
+	 * @param rowIdx
+	 * @return the sample index to the global row index
+	 */
+	public int getSampleIndex(int rowIdx) {
+		return m_cDataGrid.getSampleIndex(rowIdx);
+	}
 
-    public List<double[]> nonContourVectors() {
-        List<double[]> res =
-                new ArrayList<double[]>(m_cDataGrid.numVectors()
-                        - m_cDataGrid.totalLength());
-        for (int i = 0; i < m_cDataGrid.width(); i++) {
-            for (int j = 0; j < m_cDataGrid.totalLength(); j++) {
-                if (i != CENTER_COL + m_translations[j]) {
-                    res.add(m_cDataGrid.get(j, i));
-                }
-            }
-        }
-        return res;
-    }
+	public List<double[]> nonContourVectors() {
+		List<double[]> res = new ArrayList<double[]>(m_cDataGrid.numVectors()
+				- m_cDataGrid.totalLength());
+		for (int i = 0; i < m_cDataGrid.width(); i++) {
+			for (int j = 0; j < m_cDataGrid.totalLength(); j++) {
+				if (i != CENTER_COL + m_translations[j]) {
+					res.add(m_cDataGrid.get(j, i));
+				}
+			}
+		}
+		return res;
+	}
 
-    public double getCentrality() {
-        double res = 0;
-        for (int i = 0; i < m_translations.length; i++) {
-            res += m_translations[i] * weight(i);
-        }
-        return res / m_translations.length;
-    }
+	public double getCentrality() {
+		double res = 0;
+		for (int i = 0; i < m_translations.length; i++) {
+			res += m_translations[i] * weight(i);
+		}
+		return res / m_translations.length;
+	}
 
-    public double getContinuity() {
-        // TODO: ignore samples transitions and zero-weighted lines in
-        // continuity determination
-        double res = 0;
-        for (int i = 1; i < m_translations.length; i++) {
-            res =
-                    Math.max(res,
-                            Math.abs(m_translations[i] - m_translations[i - 1])
-                                    * weight(i) * weight(i - 1));
-        }
-        res =
-                Math.max(
-                        res,
-                        Math.abs(m_translations[0]
-                                - m_translations[m_translations.length - 1])
-                                * weight(0) * weight(m_translations.length - 1));
-        return res;
-    }
+	public double getContinuity() {
+		// TODO: ignore samples transitions and zero-weighted lines in
+		// continuity determination
+		double res = 0;
+		for (int i = 1; i < m_translations.length; i++) {
+			res = Math.max(res,
+					Math.abs(m_translations[i] - m_translations[i - 1])
+							* weight(i) * weight(i - 1));
+		}
+		res = Math.max(
+				res,
+				Math.abs(m_translations[0]
+						- m_translations[m_translations.length - 1])
+						* weight(0) * weight(m_translations.length - 1));
+		return res;
+	}
 
-    public Labeling<Integer> clusterDistrLabeling(Integer bgCluster) {
-        // read labeling mapping and create labeling
-        long[] dims = new long[]{m_cDataGrid.width(), numVectors()};
-        NativeImgLabeling<Integer, IntType> res =
-                new NativeImgLabeling<Integer, IntType>(
-                        new ArrayImgFactory<IntType>().create(dims,
-                                new IntType()));
+	public RandomAccessibleInterval<LabelingType<Integer>> clusterDistrLabeling(
+			Integer bgCluster) {
+		// read labeling mapping and create labeling
+		long[] dims = new long[] { m_cDataGrid.width(), numVectors() };
+		RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
+				.ops().createImgLabeling(dims);
 
-        RandomAccess<LabelingType<Integer>> ra = res.randomAccess();
-        for (int h = 0; h < res.dimension(1); h++) {
-            int clustIdx;
-            List<Integer> label;
-            if ((clustIdx = getClusterIdx(h)) != bgCluster && weight(h) > 0) {
-                label = ra.get().getMapping().intern(new Integer[]{clustIdx});
-            } else {
-                label = ra.get().getMapping().emptyList();
-            }
-            ra.setPosition(h, 1);
-            for (int w = 0; w < res.dimension(0); w++) {
-                ra.setPosition(w, 0);
-                ra.get().setLabeling(label);
-            }
-        }
-        return res;
-    }
+		RandomAccess<LabelingType<Integer>> ra = res.randomAccess();
+		for (int h = 0; h < res.dimension(1); h++) {
+			int clustIdx;
+			Integer label;
+			if ((clustIdx = getClusterIdx(h)) != bgCluster && weight(h) > 0) {
+				label = clustIdx;
+			} else {
+				label = null;
+			}
+			ra.setPosition(h, 1);
+			for (int w = 0; w < res.dimension(0); w++) {
+				ra.setPosition(w, 0);
+				if (label == null)
+					ra.get().clear();
+				else
+					ra.get().add(label);
+			}
+		}
+		return res;
+	}
 
-    /*
-     * Debugging
-     */
-    public <T extends RealType<T>> Img<T> transformContourImage(
-            Img<T> contourImg) {
+	/*
+	 * Debugging
+	 */
+	public <T extends RealType<T>> Img<T> transformContourImage(
+			Img<T> contourImg) {
 
-        Img<T> res = contourImg.copy();
-        RandomAccess<T> resRA = res.randomAccess();
-        Cursor<T> srcCur = contourImg.localizingCursor();
+		Img<T> res = contourImg.copy();
+		RandomAccess<T> resRA = res.randomAccess();
+		Cursor<T> srcCur = contourImg.localizingCursor();
 
-        while (srcCur.hasNext()) {
-            srcCur.fwd();
-            resRA.setPosition(
-                    (srcCur.getIntPosition(0)
-                            - m_translations[srcCur.getIntPosition(1)] + res
-                                .dimension(0)) % res.dimension(0), 0);
-            resRA.setPosition(m_permutation[srcCur.getIntPosition(1)], 1);
-            resRA.get().set(srcCur.get());
-        }
+		while (srcCur.hasNext()) {
+			srcCur.fwd();
+			resRA.setPosition(
+					(srcCur.getIntPosition(0)
+							- m_translations[srcCur.getIntPosition(1)] + res
+								.dimension(0)) % res.dimension(0), 0);
+			resRA.setPosition(m_permutation[srcCur.getIntPosition(1)], 1);
+			resRA.get().set(srcCur.get());
+		}
 
-        return res;
-    }
+		return res;
+	}
 
 }

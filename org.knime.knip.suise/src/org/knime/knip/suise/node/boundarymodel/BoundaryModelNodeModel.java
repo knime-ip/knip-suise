@@ -63,11 +63,16 @@ import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.labeling.Labeling;
+import net.imglib2.roi.labeling.ImgLabeling;
+import net.imglib2.roi.labeling.LabelRegion;
+import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.util.ConstantUtils;
@@ -97,6 +102,7 @@ import org.knime.knip.base.data.labeling.LabelingValue;
 import org.knime.knip.base.exceptions.KNIPException;
 import org.knime.knip.base.node.NodeUtils;
 import org.knime.knip.base.node.TwoValuesToCellNodeModel;
+import org.knime.knip.core.KNIPGateway;
 import org.knime.knip.core.data.img.DefaultImgMetadata;
 import org.knime.knip.core.util.PolygonTools;
 /**
@@ -383,16 +389,17 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 	}
 
 	/* Creates a list of polygons from a labeling */
-	private Collection<Polygon> getPolygons(Labeling<L> lab) {
+	private Collection<Polygon> getPolygons(
+			RandomAccessibleInterval<LabelingType<L>> randomAccessibleInterval) {
 		int[] offset = new int[2];
 		long[] tmp = new long[2];
 		ArrayList<Polygon> polygons = new ArrayList<Polygon>();
-		for (L label : lab.getLabels()) {
-			Img<BitType> mask = binaryMask(lab.getIterableRegionOfInterest(
-					label).getIterableIntervalOverROI(
-					ConstantUtils
-							.constantRandomAccessible(new BitType(true), 2)));
-			lab.getExtents(label, tmp, null);
+		final LabelRegions<L> regions = KNIPGateway.regions().regions(
+				randomAccessibleInterval);
+		for (final L label : regions.getExistingLabels()) {
+			LabelRegion<L> region = regions.getLabelRegion(label);
+			Img<BitType> mask = binaryMask(region);
+			region.min(tmp);
 			offset[0] = (int) tmp[0];
 			offset[1] = (int) tmp[1];
 			Polygon p = PolygonTools.extractPolygon(mask, offset);
@@ -402,12 +409,12 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 	}
 
 	/* Creates the binary mask from an iterable interval */
-	private Img<BitType> binaryMask(IterableInterval<BitType> ii) {
+	private Img<BitType> binaryMask(IterableInterval<BoolType> ii) {
 		Img<BitType> binaryMask = new ArrayImgFactory<BitType>().create(ii,
 				new BitType());
 		RandomAccess<BitType> maskRA = binaryMask.randomAccess();
 
-		Cursor<BitType> cur = ii.localizingCursor();
+		Cursor<BoolType> cur = ii.localizingCursor();
 		while (cur.hasNext()) {
 			cur.fwd();
 			for (int d = 0; d < cur.numDimensions(); d++) {

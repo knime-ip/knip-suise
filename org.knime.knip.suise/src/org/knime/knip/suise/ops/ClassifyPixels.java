@@ -49,19 +49,19 @@
 package org.knime.knip.suise.ops;
 
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.exception.IncompatibleTypeException;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.iterator.IntervalIterator;
-import net.imglib2.labeling.Labeling;
-import net.imglib2.labeling.LabelingType;
-import net.imglib2.labeling.NativeImgLabeling;
 import net.imglib2.ops.img.UnaryObjectFactory;
 import net.imglib2.ops.img.UnaryOperationAssignment;
 import net.imglib2.ops.operation.UnaryOutputOperation;
 import net.imglib2.ops.operation.real.unary.RealConstant;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+
+import org.knime.knip.core.KNIPGateway;
+
 /**
  * TODO Auto-generated 
  * 
@@ -78,164 +78,160 @@ import weka.core.Utils;
  * @author Martin Horn, University of Konstanz
  */
 public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
-        implements UnaryOutputOperation<Img<T>, Img<RT>[]> {
+		implements UnaryOutputOperation<Img<T>, Img<RT>[]> {
 
-    private final boolean m_createLabeling;
+	private final boolean m_createLabeling;
 
-    private NativeImgLabeling<String, IntType> m_labeling;
+	private RandomAccessibleInterval<LabelingType<String>> m_labeling;
 
-    private final Classifier m_classifier;
+	private final Classifier m_classifier;
 
-    private final int m_numClasses;
+	private final int m_numClasses;
 
-    private final int[] m_dimIndices;
+	private final int[] m_dimIndices;
 
-    private final int m_featDimIdx;
+	private final int m_featDimIdx;
 
-    private final Instances m_dataset;
+	private final Instances m_dataset;
 
-    private final RT m_resType;
+	private final RT m_resType;
 
-    public ClassifyPixels(Classifier classifier, Instances dataset,
-            int numClasses, int[] dimIndices, int featDimIdx,
-            boolean createLabeling, RT resType) {
-        m_classifier = classifier;
-        m_dataset = dataset;
-        m_numClasses = numClasses;
-        m_dimIndices = dimIndices;
-        m_featDimIdx = featDimIdx;
-        m_createLabeling = createLabeling;
-        m_resType = resType;
+	public ClassifyPixels(Classifier classifier, Instances dataset,
+			int numClasses, int[] dimIndices, int featDimIdx,
+			boolean createLabeling, RT resType) {
+		m_classifier = classifier;
+		m_dataset = dataset;
+		m_numClasses = numClasses;
+		m_dimIndices = dimIndices;
+		m_featDimIdx = featDimIdx;
+		m_createLabeling = createLabeling;
+		m_resType = resType;
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Img<RT>[] compute(Img<T> op, Img<RT>[] r) {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Img<RT>[] compute(Img<T> op, Img<RT>[] r) {
 
-        RandomAccess<LabelingType<String>> labelingRA = null;
-        if (m_createLabeling) {
-            long[] dims = new long[m_dimIndices.length];
-            for (int j = 0; j < dims.length; j++) {
-                dims[j] = op.dimension(j);
-            }
+		RandomAccess<LabelingType<String>> labelingRA = null;
+		if (m_createLabeling) {
+			long[] dims = new long[m_dimIndices.length];
+			for (int j = 0; j < dims.length; j++) {
+				dims[j] = op.dimension(j);
+			}
 
-            m_labeling =
-                    new NativeImgLabeling<String, IntType>(
-                            new ArrayImgFactory<IntType>().create(dims,
-                                    new IntType()));
-            labelingRA = m_labeling.randomAccess();
-        }
+			m_labeling = (RandomAccessibleInterval<LabelingType<String>>) KNIPGateway
+					.ops().createImgLabeling(dims);
+			labelingRA = m_labeling.randomAccess();
+		}
 
-        long[] max = new long[m_dimIndices.length];
-        for (int d = 0; d < m_dimIndices.length; d++) {
-            max[d] = op.max(m_dimIndices[d]);
-        }
+		long[] max = new long[m_dimIndices.length];
+		for (int d = 0; d < m_dimIndices.length; d++) {
+			max[d] = op.max(m_dimIndices[d]);
+		}
 
-        IntervalIterator ii =
-                new IntervalIterator(new long[m_dimIndices.length], max);
+		IntervalIterator ii = new IntervalIterator(
+				new long[m_dimIndices.length], max);
 
-        RandomAccess<RT>[] resRAs = new RandomAccess[r.length];
-        for (int i = 0; i < resRAs.length; i++) {
-            resRAs[i] = r[i].randomAccess();
-        }
-        RandomAccess<T> imgRA = op.randomAccess();
+		RandomAccess<RT>[] resRAs = new RandomAccess[r.length];
+		for (int i = 0; i < resRAs.length; i++) {
+			resRAs[i] = r[i].randomAccess();
+		}
+		RandomAccess<T> imgRA = op.randomAccess();
 
-        double[] featVec = new double[(int)op.dimension(m_featDimIdx)];
-        Instance instance = new DenseInstance(1.0, featVec);
-        instance.setDataset(m_dataset);
-        while (ii.hasNext()) {
-            ii.fwd();
-            for (int d = 0; d < m_dimIndices.length; d++) {
-                imgRA.setPosition(ii.getLongPosition(d), m_dimIndices[d]);
-            }
+		double[] featVec = new double[(int) op.dimension(m_featDimIdx)];
+		Instance instance = new DenseInstance(1.0, featVec);
+		instance.setDataset(m_dataset);
+		while (ii.hasNext()) {
+			ii.fwd();
+			for (int d = 0; d < m_dimIndices.length; d++) {
+				imgRA.setPosition(ii.getLongPosition(d), m_dimIndices[d]);
+			}
 
-            for (int f = 0; f < op.dimension(m_featDimIdx); f++) {
-                imgRA.setPosition(f, m_featDimIdx);
-                featVec[f] = imgRA.get().getRealDouble();
-            }
+			for (int f = 0; f < op.dimension(m_featDimIdx); f++) {
+				imgRA.setPosition(f, m_featDimIdx);
+				featVec[f] = imgRA.get().getRealDouble();
+			}
 
-            double[] probs = null;
-            try {
-                probs = m_classifier.distributionForInstance(instance);
+			double[] probs = null;
+			try {
+				probs = m_classifier.distributionForInstance(instance);
 
-                if (m_createLabeling) {
-                    for (int d = 0; d < m_dimIndices.length; d++) {
-                        labelingRA.setPosition(ii.getLongPosition(d), d);
-                        labelingRA.get().setLabel(
-                                m_dataset.classAttribute().value(
-                                        Utils.maxIndex(probs)));
-                    }
-                }
+				if (m_createLabeling) {
+					for (int d = 0; d < m_dimIndices.length; d++) {
+						labelingRA.setPosition(ii.getLongPosition(d), d);
+						labelingRA.get().clear();
+						labelingRA.get().add(
+								m_dataset.classAttribute().value(
+										Utils.maxIndex(probs)));
+					}
+				}
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            for (int i = 0; i < probs.length; i++) {
-                if (probs[i] > 0) {
-                    for (int d = 0; d < m_dimIndices.length; d++) {
-                        resRAs[i].setPosition(ii.getLongPosition(d), d);
-                        resRAs[i].get().setReal(
-                                probs[i]
-                                        * (m_resType.getMaxValue() - m_resType
-                                                .getMinValue())
-                                        + m_resType.getMinValue());
-                    }
-                }
-            }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			for (int i = 0; i < probs.length; i++) {
+				if (probs[i] > 0) {
+					for (int d = 0; d < m_dimIndices.length; d++) {
+						resRAs[i].setPosition(ii.getLongPosition(d), d);
+						resRAs[i].get().setReal(
+								probs[i]
+										* (m_resType.getMaxValue() - m_resType
+												.getMinValue())
+										+ m_resType.getMinValue());
+					}
+				}
+			}
 
-        }
+		}
 
-        return r;
+		return r;
 
-    }
+	}
 
-    public Labeling<String> getLabeling() {
-        return m_labeling;
-    }
+	public RandomAccessibleInterval<LabelingType<String>> getLabeling() {
+		return m_labeling;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public UnaryOutputOperation<Img<T>, Img<RT>[]> copy() {
-        return new ClassifyPixels<T, RT>(m_classifier, m_dataset, m_numClasses,
-                m_dimIndices, m_featDimIdx, m_createLabeling, m_resType);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public UnaryOutputOperation<Img<T>, Img<RT>[]> copy() {
+		return new ClassifyPixels<T, RT>(m_classifier, m_dataset, m_numClasses,
+				m_dimIndices, m_featDimIdx, m_createLabeling, m_resType);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public UnaryObjectFactory<Img<T>, Img<RT>[]> bufferFactory() {
-        return new UnaryObjectFactory<Img<T>, Img<RT>[]>() {
+	/**
+	 * {@inheritDoc}
+	 */
+	public UnaryObjectFactory<Img<T>, Img<RT>[]> bufferFactory() {
+		return new UnaryObjectFactory<Img<T>, Img<RT>[]>() {
 
-            @Override
-            public Img<RT>[] instantiate(Img<T> a) {
-                Img<RT>[] res = new Img[m_numClasses];
-                UnaryOperationAssignment<RT, RT> set =
-                        new UnaryOperationAssignment<RT, RT>(
-                                new RealConstant<RT, RT>(
-                                        m_resType.getMinValue()));
-                for (int i = 0; i < res.length; i++) {
-                    try {
-                        long[] dims = new long[m_dimIndices.length];
-                        for (int j = 0; j < dims.length; j++) {
-                            dims[j] = a.dimension(j);
-                        }
-                        res[i] =
-                                a.factory().imgFactory(m_resType)
-                                        .create(dims, m_resType);
+			@Override
+			public Img<RT>[] instantiate(Img<T> a) {
+				Img<RT>[] res = new Img[m_numClasses];
+				UnaryOperationAssignment<RT, RT> set = new UnaryOperationAssignment<RT, RT>(
+						new RealConstant<RT, RT>(m_resType.getMinValue()));
+				for (int i = 0; i < res.length; i++) {
+					try {
+						long[] dims = new long[m_dimIndices.length];
+						for (int j = 0; j < dims.length; j++) {
+							dims[j] = a.dimension(j);
+						}
+						res[i] = a.factory().imgFactory(m_resType)
+								.create(dims, m_resType);
 
-                        set.compute(res[i], res[i]);
-                    } catch (IncompatibleTypeException e) {
-                        e.printStackTrace();
-                    }
-                }
-                return res;
-            }
-        };
-    }
+						set.compute(res[i], res[i]);
+					} catch (IncompatibleTypeException e) {
+						e.printStackTrace();
+					}
+				}
+				return res;
+			}
+		};
+	}
 
 }

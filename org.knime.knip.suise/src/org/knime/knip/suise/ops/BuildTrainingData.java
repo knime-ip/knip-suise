@@ -57,14 +57,16 @@ import java.util.Map;
 import java.util.Random;
 
 import net.imglib2.Cursor;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.labeling.Labeling;
-import net.imglib2.labeling.LabelingType;
 import net.imglib2.ops.operation.BinaryObjectFactory;
 import net.imglib2.ops.operation.BinaryOutputOperation;
 import net.imglib2.outofbounds.OutOfBounds;
 import net.imglib2.outofbounds.OutOfBoundsBorder;
 import net.imglib2.roi.RectangleRegionOfInterest;
+import net.imglib2.roi.labeling.ImgLabeling;
+import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;
 
 import org.knime.core.node.NodeLogger;
@@ -81,7 +83,8 @@ import weka.core.Instances;
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
 public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
-		implements BinaryOutputOperation<Labeling<L>, Img<T>, Instances> {
+		implements
+		BinaryOutputOperation<RandomAccessibleInterval<LabelingType<L>>, Img<T>, Instances> {
 
 	private final int[] m_dimIndices;
 
@@ -107,7 +110,8 @@ public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Instances compute(Labeling<L> lab, Img<T> img, Instances r) {
+	public Instances compute(RandomAccessibleInterval<LabelingType<L>> lab,
+			Img<T> img, Instances r) {
 		Random rand = new Random();
 
 		double[] extent = new double[lab.numDimensions()];
@@ -121,17 +125,17 @@ public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
 				.localizingCursor();
 		OutOfBounds<T> imgRA = new OutOfBoundsBorder<T>(img);
 
+		LabelRegions<L> regions = new LabelRegions<L>(lab);
 		// get the class distributions
 		Map<L, Double> classDistr = null;
 		if (m_balanceInstancePerClass) {
 			long sum = 0;
 			long area;
-			Collection<L> labels = lab.getLabels();
+			Collection<L> labels = regions.getExistingLabels();
 			classDistr = new HashMap<L, Double>(labels.size());
 			for (L label : labels) {
-				area = lab.getArea(label);
+				area = regions.getLabelRegion(label).size();
 				sum += area;
-				lab.getArea(label);
 				classDistr.put(label, new Double(area));
 			}
 			// determine the new sampling rate for each class individually
@@ -158,11 +162,11 @@ public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
 				}
 
 			}
-			if (!labCur.get().getLabeling().isEmpty()) {
+			if (!labCur.get().isEmpty()) {
 
 				if (m_balanceInstancePerClass) {
 					if (rand.nextDouble() >= classDistr.get(labCur.get()
-							.getLabeling().get(0))) {
+							.iterator().next())) {
 						continue;
 					}
 				} else {
@@ -176,7 +180,7 @@ public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
 					imgRA.setPosition(f, m_featDim);
 					featVec[f] = imgRA.get().getRealDouble();
 				}
-				for (L classLabel : labCur.get().getLabeling()) {
+				for (L classLabel : labCur.get()) {
 					Instance instance = new DenseInstance(1.0, featVec);
 					instance.insertAttributeAt(instance.numAttributes());
 					instance.setDataset(r);
@@ -194,7 +198,7 @@ public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BinaryOutputOperation<Labeling<L>, Img<T>, Instances> copy() {
+	public BinaryOutputOperation<RandomAccessibleInterval<LabelingType<L>>, Img<T>, Instances> copy() {
 		return new BuildTrainingData<L, T>(m_classLabels, m_dimIndices,
 				m_featDim, m_samplingRate, m_balanceInstancePerClass);
 	}
@@ -202,11 +206,13 @@ public class BuildTrainingData<L extends Comparable<L>, T extends RealType<T>>
 	/**
 	 * {@inheritDoc}
 	 */
-	public BinaryObjectFactory<Labeling<L>, Img<T>, Instances> bufferFactory() {
-		return new BinaryObjectFactory<Labeling<L>, Img<T>, Instances>() {
+	public BinaryObjectFactory<RandomAccessibleInterval<LabelingType<L>>, Img<T>, Instances> bufferFactory() {
+		return new BinaryObjectFactory<RandomAccessibleInterval<LabelingType<L>>, Img<T>, Instances>() {
 
 			@Override
-			public Instances instantiate(Labeling<L> inputA, Img<T> inputB) {
+			public Instances instantiate(
+					RandomAccessibleInterval<LabelingType<L>> inputA,
+					Img<T> inputB) {
 				// build training set
 				ArrayList<Attribute> attr = new ArrayList<Attribute>();
 				for (int a = 0; a < inputB.dimension(m_featDim); a++) {

@@ -56,8 +56,12 @@ import java.util.List;
 import java.util.Set;
 
 import net.imagej.ImgPlus;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.labeling.Labeling;
+import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Util;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -82,6 +86,7 @@ import org.knime.knip.base.data.labeling.LabelingValue;
 import org.knime.knip.base.exceptions.KNIPRuntimeException;
 import org.knime.knip.base.node.NodeUtils;
 import org.knime.knip.base.node.nodesettings.SettingsModelDimSelection;
+import org.knime.knip.core.KNIPGateway;
 import org.knime.knip.suise.node.port.WekaClassifierPortObject;
 import org.knime.knip.suise.node.port.WekaClassifierPortObjectSpec;
 import org.knime.knip.suise.ops.BuildTrainingData;
@@ -101,270 +106,266 @@ import weka.core.Instances;
  * @author Martin Horn, University of Konstanz
  */
 public class PixClassModelNodeModel<T extends RealType<T>, L extends Comparable<L>>
-        extends NodeModel {
+		extends NodeModel {
 
-    protected static final NodeLogger LOGGER = NodeLogger
-            .getLogger(PixClassModelNodeModel.class);
+	protected static final NodeLogger LOGGER = NodeLogger
+			.getLogger(PixClassModelNodeModel.class);
 
-    static final SettingsModelString createLabColumnModel() {
-        return new SettingsModelString("labeling_column", "");
-    }
+	static final SettingsModelString createLabColumnModel() {
+		return new SettingsModelString("labeling_column", "");
+	}
 
-    static final SettingsModelString createImgColumnModel() {
-        return new SettingsModelString("img_column", "");
-    }
+	static final SettingsModelString createImgColumnModel() {
+		return new SettingsModelString("img_column", "");
+	}
 
-    static final SettingsModelDimSelection createDimSelectionModel() {
-        return new SettingsModelDimSelection("dim_selection", "X", "Y");
-    }
+	static final SettingsModelDimSelection createDimSelectionModel() {
+		return new SettingsModelDimSelection("dim_selection", "X", "Y");
+	}
 
-    static final SettingsModelDimSelection createFeatDimSelectionModel() {
-        return new SettingsModelDimSelection("feat_dim_selection", "C");
-    }
+	static final SettingsModelDimSelection createFeatDimSelectionModel() {
+		return new SettingsModelDimSelection("feat_dim_selection", "C");
+	}
 
-    static final SettingsModelWekaClassifier createClassifierSelectionModel() {
-        return new SettingsModelWekaClassifier("weka_classifier",
-                new RandomForest());
-    }
+	static final SettingsModelWekaClassifier createClassifierSelectionModel() {
+		return new SettingsModelWekaClassifier("weka_classifier",
+				new RandomForest());
+	}
 
-    static final SettingsModelDouble createSampleRateModel() {
-        return new SettingsModelDouble("sample_rate", 0.1);
-    }
+	static final SettingsModelDouble createSampleRateModel() {
+		return new SettingsModelDouble("sample_rate", 0.1);
+	}
 
-    static final SettingsModelBoolean createBalanceModel() {
-        return new SettingsModelBoolean("balance_instances", false);
-    }
+	static final SettingsModelBoolean createBalanceModel() {
+		return new SettingsModelBoolean("balance_instances", false);
+	}
 
-    public static final int INPUT_DATATABLE_PORT = 0;
+	public static final int INPUT_DATATABLE_PORT = 0;
 
-    private SettingsModelString m_labelingColumn = createLabColumnModel();
+	private SettingsModelString m_labelingColumn = createLabColumnModel();
 
-    private SettingsModelString m_imgColumn = createImgColumnModel();
+	private SettingsModelString m_imgColumn = createImgColumnModel();
 
-    private SettingsModelDimSelection m_dimSelection =
-            createDimSelectionModel();
+	private SettingsModelDimSelection m_dimSelection = createDimSelectionModel();
 
-    private SettingsModelDimSelection m_featDimSelection =
-            createFeatDimSelectionModel();
+	private SettingsModelDimSelection m_featDimSelection = createFeatDimSelectionModel();
 
-    private SettingsModelWekaClassifier m_classifierSelection =
-            createClassifierSelectionModel();
+	private SettingsModelWekaClassifier m_classifierSelection = createClassifierSelectionModel();
 
-    private SettingsModelDouble m_resampleRate = createSampleRateModel();
+	private SettingsModelDouble m_resampleRate = createSampleRateModel();
 
-    private SettingsModelBoolean m_balanceClassInstances = createBalanceModel();
+	private SettingsModelBoolean m_balanceClassInstances = createBalanceModel();
 
-    protected PixClassModelNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{WekaClassifierPortObject.TYPE});
-    }
+	protected PixClassModelNodeModel() {
+		super(new PortType[] { BufferedDataTable.TYPE },
+				new PortType[] { WekaClassifierPortObject.TYPE });
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
 
-        getImgColumnIndex((DataTableSpec)inSpecs[0]);
-        getLabelingColumnIndex((DataTableSpec)inSpecs[0]);
-        return null;
-    }
+		getImgColumnIndex((DataTableSpec) inSpecs[0]);
+		getLabelingColumnIndex((DataTableSpec) inSpecs[0]);
+		return null;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
-            throws Exception {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
+			throws Exception {
 
-        BufferedDataTable inTable = (BufferedDataTable)inObjects[0];
+		BufferedDataTable inTable = (BufferedDataTable) inObjects[0];
 
-        int imgColIdx = getImgColumnIndex(inTable.getDataTableSpec());
-        int labColIdx = getLabelingColumnIndex(inTable.getDataTableSpec());
+		int imgColIdx = getImgColumnIndex(inTable.getDataTableSpec());
+		int labColIdx = getLabelingColumnIndex(inTable.getDataTableSpec());
 
-        // retrieve all available labels
-        RowIterator it = inTable.iterator();
-        DataRow row;
-        Set<L> labels = new HashSet<L>();
-        Instances trainingSet = null;
-        int rowCount = inTable.getRowCount();
-        int i = 0;
-        while (it.hasNext()) {
-            row = it.next();
-            if (row.getCell(labColIdx).isMissing()
-                    || row.getCell(imgColIdx).isMissing()) {
-                setWarningMessage("Errors occurred while execution! See console for details.");
-                LOGGER.warn("Missing cell in row " + row.getKey()
-                        + ". Row skipped!");
-                continue;
-            }
-            Labeling<L> lab =
-                    ((LabelingValue<L>)row.getCell(labColIdx)).getLabeling();
-            ImgPlus<T> img =
-                    ((ImgPlusValue<T>)row.getCell(imgColIdx)).getImgPlus();
+		// retrieve all available labels
+		RowIterator it = inTable.iterator();
+		DataRow row;
+		Set<L> labels = new HashSet<L>();
+		Instances trainingSet = null;
+		int rowCount = inTable.getRowCount();
+		int i = 0;
+		while (it.hasNext()) {
+			row = it.next();
+			if (row.getCell(labColIdx).isMissing()
+					|| row.getCell(imgColIdx).isMissing()) {
+				setWarningMessage("Errors occurred while execution! See console for details.");
+				LOGGER.warn("Missing cell in row " + row.getKey()
+						+ ". Row skipped!");
+				continue;
+			}
+			RandomAccessibleInterval<LabelingType<L>> lab = ((LabelingValue<L>) row
+					.getCell(labColIdx)).getLabeling();
+			ImgPlus<T> img = ((ImgPlusValue<T>) row.getCell(imgColIdx))
+					.getImgPlus();
 
-            // collect available labels
-            labels.addAll(lab.firstElement().getMapping().getLabels());
+			// collect available labels
+			LabelRegions<L> regions = KNIPGateway.regions().regions(lab);
+			labels.addAll(regions.getExistingLabels());
 
-            int[] tmp =
-                    m_featDimSelection.getSelectedDimIndices(
-                            img.numDimensions(), img);
-            if (tmp.length == 0) {
-                setWarningMessage("Errors occurred while execution! See console for details.");
-                LOGGER.warn("Feature dimensions doesn't exist in image in row "
-                        + row.getKey() + ". Row skipped!");
-                continue;
-            }
-            int featDim = tmp[0];
+			int[] tmp = m_featDimSelection.getSelectedDimIndices(
+					img.numDimensions(), img);
+			if (tmp.length == 0) {
+				setWarningMessage("Errors occurred while execution! See console for details.");
+				LOGGER.warn("Feature dimensions doesn't exist in image in row "
+						+ row.getKey() + ". Row skipped!");
+				continue;
+			}
+			int featDim = tmp[0];
 
-            int[] dimIndices =
-                    m_dimSelection.getSelectedDimIndices(img.numDimensions(),
-                            img);
-            List<String> classLabels = new ArrayList<String>();
-            for (L label : lab.firstElement().getMapping().getLabels()) {
-                classLabels.add(label.toString());
-            }
-            BuildTrainingData<L, T> btd =
-                    new BuildTrainingData<L, T>(classLabels, dimIndices,
-                            featDim, m_resampleRate.getDoubleValue(),
-                            m_balanceClassInstances.getBooleanValue());
+			int[] dimIndices = m_dimSelection.getSelectedDimIndices(
+					img.numDimensions(), img);
+			List<String> classLabels = new ArrayList<String>();
+			for (L label : regions.getExistingLabels()) {
+				classLabels.add(label.toString());
+			}
+			BuildTrainingData<L, T> btd = new BuildTrainingData<L, T>(
+					classLabels, dimIndices, featDim,
+					m_resampleRate.getDoubleValue(),
+					m_balanceClassInstances.getBooleanValue());
 
-            if (trainingSet == null) {
-                trainingSet = btd.bufferFactory().instantiate(lab, img);
-            }
-            exec.setProgress("Building training set for row " + row.getKey());
-            try {
-                btd.compute(lab, img, trainingSet);
-            } catch (KNIPRuntimeException e) {
-                setWarningMessage("Errors occurred while execution! See console for details.");
-                LOGGER.warn("Row " + row.getKey() + " skipped. "
-                        + e.getLocalizedMessage());
-            }
+			if (trainingSet == null) {
+				trainingSet = btd.bufferFactory().instantiate(lab, img);
+			}
+			exec.setProgress("Building training set for row " + row.getKey());
+			try {
+				btd.compute(lab, img, trainingSet);
+			} catch (KNIPRuntimeException e) {
+				setWarningMessage("Errors occurred while execution! See console for details.");
+				LOGGER.warn("Row " + row.getKey() + " skipped. "
+						+ e.getLocalizedMessage());
+			}
 
-            exec.checkCanceled();
-            exec.setProgress((double)i / rowCount);
-            i++;
-        }
+			exec.checkCanceled();
+			exec.setProgress((double) i / rowCount);
+			i++;
+		}
 
-        // build classifier
-        exec.setProgress("Build classifier ...");
-        if (trainingSet == null) {
-            throw new IllegalStateException(
-                    "No training set could be created due to the lack of training samples. Maybe wrong (i.e. non-existent) feature dimension selected!?");
-        }
+		// build classifier
+		exec.setProgress("Build classifier ...");
+		if (trainingSet == null) {
+			throw new IllegalStateException(
+					"No training set could be created due to the lack of training samples. Maybe wrong (i.e. non-existent) feature dimension selected!?");
+		}
 
-        // count instances per class for debugging purposes
-        double[] classDistr = new double[trainingSet.numClasses()];
-        for (Instance instance : trainingSet) {
-            classDistr[(int)instance.classValue()]++;
-        }
-        Classifier classifier = m_classifierSelection.getClassifier();
-        classifier.buildClassifier(trainingSet);
-        return new PortObject[]{new WekaClassifierPortObject(classifier,
-                trainingSet, new WekaClassifierPortObjectSpec(
-                        labels.toArray(new String[labels.size()])))};
+		// count instances per class for debugging purposes
+		double[] classDistr = new double[trainingSet.numClasses()];
+		for (Instance instance : trainingSet) {
+			classDistr[(int) instance.classValue()]++;
+		}
+		Classifier classifier = m_classifierSelection.getClassifier();
+		classifier.buildClassifier(trainingSet);
+		return new PortObject[] { new WekaClassifierPortObject(classifier,
+				trainingSet, new WekaClassifierPortObjectSpec(
+						labels.toArray(new String[labels.size()]))) };
 
-    }
+	}
 
-    /**
-     * @param inSpec
-     * @return index of the image column
-     * @throws InvalidSettingsException
-     */
-    protected final int getImgColumnIndex(DataTableSpec inSpec)
-            throws InvalidSettingsException {
-        return NodeUtils.silentOptionalAutoColumnSelection(inSpec, m_imgColumn,
-                ImgPlusValue.class);
+	/**
+	 * @param inSpec
+	 * @return index of the image column
+	 * @throws InvalidSettingsException
+	 */
+	protected final int getImgColumnIndex(DataTableSpec inSpec)
+			throws InvalidSettingsException {
+		return NodeUtils.silentOptionalAutoColumnSelection(inSpec, m_imgColumn,
+				ImgPlusValue.class);
 
-    }
+	}
 
-    /**
-     * @param inSpec
-     * @return index of the labeling column
-     * @throws InvalidSettingsException
-     */
-    protected final int getLabelingColumnIndex(DataTableSpec inSpec)
-            throws InvalidSettingsException {
-        return NodeUtils.silentOptionalAutoColumnSelection(inSpec,
-                m_labelingColumn, LabelingValue.class);
+	/**
+	 * @param inSpec
+	 * @return index of the labeling column
+	 * @throws InvalidSettingsException
+	 */
+	protected final int getLabelingColumnIndex(DataTableSpec inSpec)
+			throws InvalidSettingsException {
+		return NodeUtils.silentOptionalAutoColumnSelection(inSpec,
+				m_labelingColumn, LabelingValue.class);
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
-        m_imgColumn.saveSettingsTo(settings);
-        m_labelingColumn.saveSettingsTo(settings);
-        m_dimSelection.saveSettingsTo(settings);
-        m_featDimSelection.saveSettingsTo(settings);
-        m_classifierSelection.saveSettingsTo(settings);
-        m_resampleRate.saveSettingsTo(settings);
-        m_balanceClassInstances.saveSettingsTo(settings);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void saveSettingsTo(NodeSettingsWO settings) {
+		m_imgColumn.saveSettingsTo(settings);
+		m_labelingColumn.saveSettingsTo(settings);
+		m_dimSelection.saveSettingsTo(settings);
+		m_featDimSelection.saveSettingsTo(settings);
+		m_classifierSelection.saveSettingsTo(settings);
+		m_resampleRate.saveSettingsTo(settings);
+		m_balanceClassInstances.saveSettingsTo(settings);
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_imgColumn.validateSettings(settings);
-        m_labelingColumn.validateSettings(settings);
-        m_dimSelection.validateSettings(settings);
-        m_featDimSelection.validateSettings(settings);
-        m_classifierSelection.validateSettings(settings);
-        m_resampleRate.validateSettings(settings);
-        m_balanceClassInstances.validateSettings(settings);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void validateSettings(NodeSettingsRO settings)
+			throws InvalidSettingsException {
+		m_imgColumn.validateSettings(settings);
+		m_labelingColumn.validateSettings(settings);
+		m_dimSelection.validateSettings(settings);
+		m_featDimSelection.validateSettings(settings);
+		m_classifierSelection.validateSettings(settings);
+		m_resampleRate.validateSettings(settings);
+		m_balanceClassInstances.validateSettings(settings);
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_imgColumn.loadSettingsFrom(settings);
-        m_labelingColumn.loadSettingsFrom(settings);
-        m_dimSelection.loadSettingsFrom(settings);
-        m_featDimSelection.loadSettingsFrom(settings);
-        m_classifierSelection.loadSettingsFrom(settings);
-        m_resampleRate.loadSettingsFrom(settings);
-        m_balanceClassInstances.loadSettingsFrom(settings);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
+			throws InvalidSettingsException {
+		m_imgColumn.loadSettingsFrom(settings);
+		m_labelingColumn.loadSettingsFrom(settings);
+		m_dimSelection.loadSettingsFrom(settings);
+		m_featDimSelection.loadSettingsFrom(settings);
+		m_classifierSelection.loadSettingsFrom(settings);
+		m_resampleRate.loadSettingsFrom(settings);
+		m_balanceClassInstances.loadSettingsFrom(settings);
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        //
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void reset() {
+		//
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        //
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
+			throws IOException, CanceledExecutionException {
+		//
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        //
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
+			throws IOException, CanceledExecutionException {
+		//
 
-    }
+	}
 
 }

@@ -51,11 +51,13 @@ package org.knime.knip.suise.node.levelcca;
 import java.util.List;
 
 import net.imagej.ImgPlus;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.Labeling;
 import net.imglib2.labeling.NativeImgLabeling;
 import net.imglib2.ops.operation.randomaccessibleinterval.unary.regiongrowing.AbstractRegionGrowing;
 import net.imglib2.ops.types.ConnectedType;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.integer.IntType;
@@ -75,6 +77,7 @@ import org.knime.knip.base.data.labeling.LabelingCellFactory;
 import org.knime.knip.base.node.ValueToCellNodeDialog;
 import org.knime.knip.base.node.ValueToCellNodeFactory;
 import org.knime.knip.base.node.ValueToCellNodeModel;
+import org.knime.knip.core.KNIPGateway;
 import org.knime.knip.core.data.img.DefaultLabelingMetadata;
 import org.knime.knip.core.util.EnumUtils;
 
@@ -85,135 +88,130 @@ import org.knime.knip.core.util.EnumUtils;
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
 public class LevelCCANodeFactory<T extends IntegerType<T> & NativeType<T>>
-        extends ValueToCellNodeFactory<ImgPlusValue<T>> {
+		extends ValueToCellNodeFactory<ImgPlusValue<T>> {
 
-    private static SettingsModelString createTypeModel() {
-        return new SettingsModelString("connection_type",
-                ConnectedType.values()[0].toString());
-    }
+	private static SettingsModelString createTypeModel() {
+		return new SettingsModelString("connection_type",
+				ConnectedType.values()[0].toString());
+	}
 
-    private static SettingsModelBoolean createBackgroundModel() {
-        return new SettingsModelBoolean("white_background", false);
-    }
+	private static SettingsModelBoolean createBackgroundModel() {
+		return new SettingsModelBoolean("white_background", false);
+	}
 
-    private static SettingsModelIntegerBounded createLowerBoundModel() {
-        return new SettingsModelIntegerBounded("lower_bound", 0, 0, 255);
-    }
+	private static SettingsModelIntegerBounded createLowerBoundModel() {
+		return new SettingsModelIntegerBounded("lower_bound", 0, 0, 255);
+	}
 
-    private static SettingsModelIntegerBounded createUpperBoundModel() {
-        return new SettingsModelIntegerBounded("upper_bound", 255, 0, 255);
-    }
+	private static SettingsModelIntegerBounded createUpperBoundModel() {
+		return new SettingsModelIntegerBounded("upper_bound", 255, 0, 255);
+	}
 
-    private static SettingsModelIntegerBounded createStepSizeModel() {
-        return new SettingsModelIntegerBounded("step_size", 1, 0, 255);
-    }
+	private static SettingsModelIntegerBounded createStepSizeModel() {
+		return new SettingsModelIntegerBounded("step_size", 1, 0, 255);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ValueToCellNodeModel<ImgPlusValue<T>, LabelingCell<Integer>> createNodeModel() {
-        return new ValueToCellNodeModel<ImgPlusValue<T>, LabelingCell<Integer>>() {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ValueToCellNodeModel<ImgPlusValue<T>, LabelingCell<Integer>> createNodeModel() {
+		return new ValueToCellNodeModel<ImgPlusValue<T>, LabelingCell<Integer>>() {
 
-            private LabelingCellFactory m_labelingCellFactory;
+			private LabelingCellFactory m_labelingCellFactory;
 
-            private SettingsModelString m_type = createTypeModel();
+			private SettingsModelString m_type = createTypeModel();
 
-            private SettingsModelBoolean m_background = createBackgroundModel();
+			private SettingsModelBoolean m_background = createBackgroundModel();
 
-            private SettingsModelInteger m_lowerBound = createLowerBoundModel();
+			private SettingsModelInteger m_lowerBound = createLowerBoundModel();
 
-            private SettingsModelInteger m_upperBound = createUpperBoundModel();
+			private SettingsModelInteger m_upperBound = createUpperBoundModel();
 
-            private SettingsModelIntegerBounded m_stepSize =
-                    createStepSizeModel();
+			private SettingsModelIntegerBounded m_stepSize = createStepSizeModel();
 
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            protected void prepareExecute(ExecutionContext exec) {
-                m_labelingCellFactory = new LabelingCellFactory(exec);
-            }
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			protected void prepareExecute(ExecutionContext exec) {
+				m_labelingCellFactory = new LabelingCellFactory(exec);
+			}
 
-            @Override
-            protected LabelingCell<Integer> compute(ImgPlusValue<T> cellValue)
-                    throws Exception {
-                ImgPlus<T> img = cellValue.getImgPlus();
+			@Override
+			protected LabelingCell<Integer> compute(ImgPlusValue<T> cellValue)
+					throws Exception {
+				ImgPlus<T> img = cellValue.getImgPlus();
 
-                long[][] structuringElement;
-                if (m_type.getStringValue().equals(
-                        ConnectedType.EIGHT_CONNECTED.name())) {
-                    structuringElement =
-                            AbstractRegionGrowing.get8ConStructuringElement(img
-                                    .numDimensions());
-                } else {
-                    structuringElement =
-                            AbstractRegionGrowing.get4ConStructuringElement(img
-                                    .numDimensions());
-                }
+				long[][] structuringElement;
+				if (m_type.getStringValue().equals(
+						ConnectedType.EIGHT_CONNECTED.name())) {
+					structuringElement = AbstractRegionGrowing
+							.get8ConStructuringElement(img.numDimensions());
+				} else {
+					structuringElement = AbstractRegionGrowing
+							.get4ConStructuringElement(img.numDimensions());
+				}
 
-                Labeling<Integer> res =
-                        new NativeImgLabeling<Integer, IntType>(
-                                new ArrayImgFactory<IntType>().create(img,
-                                        new IntType()));
-                new LevelCCA<T>(structuringElement,
-                        m_background.getBooleanValue(),
-                        m_lowerBound.getIntValue(), m_upperBound.getIntValue(),
-                        m_stepSize.getIntValue()).compute(img, res);
-                return m_labelingCellFactory.createCell(res,
-                        new DefaultLabelingMetadata(img, img, img, null));
-            }
+				RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
+						.ops().createImgLabeling(img);
+				new LevelCCA<T>(structuringElement,
+						m_background.getBooleanValue(),
+						m_lowerBound.getIntValue(), m_upperBound.getIntValue(),
+						m_stepSize.getIntValue()).compute(img, res);
+				return m_labelingCellFactory.createCell(res,
+						new DefaultLabelingMetadata(img, img, img, null));
+			}
 
-            @Override
-            protected void addSettingsModels(List<SettingsModel> settingsModels) {
-                settingsModels.add(m_background);
-                settingsModels.add(m_type);
-                settingsModels.add(m_lowerBound);
-                settingsModels.add(m_upperBound);
-                settingsModels.add(m_stepSize);
-            }
-        };
-    }
+			@Override
+			protected void addSettingsModels(List<SettingsModel> settingsModels) {
+				settingsModels.add(m_background);
+				settingsModels.add(m_type);
+				settingsModels.add(m_lowerBound);
+				settingsModels.add(m_upperBound);
+				settingsModels.add(m_stepSize);
+			}
+		};
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected ValueToCellNodeDialog<ImgPlusValue<T>> createNodeDialog() {
-        return new ValueToCellNodeDialog<ImgPlusValue<T>>() {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected ValueToCellNodeDialog<ImgPlusValue<T>> createNodeDialog() {
+		return new ValueToCellNodeDialog<ImgPlusValue<T>>() {
 
-            @Override
-            public void addDialogComponents() {
-                addDialogComponent(
-                        "Options",
-                        "Settings",
-                        new DialogComponentStringSelection(
-                                createTypeModel(),
-                                "Connection Type",
-                                EnumUtils
-                                        .getStringListFromToString(ConnectedType
-                                                .values())));
-                addDialogComponent("Options", "Settings",
-                        new DialogComponentBoolean(createBackgroundModel(),
-                                "White background"));
+			@Override
+			public void addDialogComponents() {
+				addDialogComponent(
+						"Options",
+						"Settings",
+						new DialogComponentStringSelection(
+								createTypeModel(),
+								"Connection Type",
+								EnumUtils
+										.getStringListFromToString(ConnectedType
+												.values())));
+				addDialogComponent("Options", "Settings",
+						new DialogComponentBoolean(createBackgroundModel(),
+								"White background"));
 
-                addDialogComponent(
-                        "Options",
-                        "Settings",
-                        new DialogComponentNumber(createLowerBoundModel(),
-                                "Lower pixel value bound (0-255, inclusive)", 1));
+				addDialogComponent(
+						"Options",
+						"Settings",
+						new DialogComponentNumber(createLowerBoundModel(),
+								"Lower pixel value bound (0-255, inclusive)", 1));
 
-                addDialogComponent(
-                        "Options",
-                        "Settings",
-                        new DialogComponentNumber(createUpperBoundModel(),
-                                "Upper pixel value bound (0-255, inclusive)", 1));
+				addDialogComponent(
+						"Options",
+						"Settings",
+						new DialogComponentNumber(createUpperBoundModel(),
+								"Upper pixel value bound (0-255, inclusive)", 1));
 
-                addDialogComponent("Options", "Settings",
-                        new DialogComponentNumber(createStepSizeModel(),
-                                "Step size", 1));
-            }
-        };
-    }
+				addDialogComponent("Options", "Settings",
+						new DialogComponentNumber(createStepSizeModel(),
+								"Step size", 1));
+			}
+		};
+	}
 }

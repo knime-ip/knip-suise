@@ -78,9 +78,9 @@ import org.knime.knip.base.data.img.ImgPlusCell;
 import org.knime.knip.base.data.img.ImgPlusCellFactory;
 import org.knime.knip.base.data.img.ImgPlusValue;
 import org.knime.knip.base.node.ValueToCellNodeModel;
+import org.knime.knip.core.KNIPGateway;
 import org.knime.knip.core.data.img.DefaultImgMetadata;
 import org.knime.knip.core.ops.img.ImgPlusNormalize;
-import org.knime.knip.core.util.ImgUtils;
 import org.knime.knip.suise.data.feat.PixFeatureFactory;
 import org.knime.knip.suise.data.feat.PixFeatureSet;
 
@@ -89,150 +89,146 @@ import org.knime.knip.suise.data.feat.PixFeatureSet;
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
 public class PixFeaturesNodeModel<T extends RealType<T>> extends
-        ValueToCellNodeModel<ImgPlusValue<T>, ImgPlusCell<UnsignedByteType>> {
+		ValueToCellNodeModel<ImgPlusValue<T>, ImgPlusCell<UnsignedByteType>> {
 
-    public static final String DEFAULT_FEATURE_DIM_LABEL = "F";
+	public static final String DEFAULT_FEATURE_DIM_LABEL = "F";
 
-    public static final String DEFAULT_ORIENTATION_DIM_LABEL = "O";
+	public static final String DEFAULT_ORIENTATION_DIM_LABEL = "O";
 
-    final static SettingsModelStringArray createActiveFeatureSetModel() {
-        return new SettingsModelStringArray("active featureSets", new String[0]);
-    }
+	final static SettingsModelStringArray createActiveFeatureSetModel() {
+		return new SettingsModelStringArray("active featureSets", new String[0]);
+	}
 
-    final static SettingsModelIntegerBounded createNumOrientationsModel(
-            int maxNumOrientations) {
-        return new SettingsModelIntegerBounded("max_num_orientations",
-                maxNumOrientations, 1, maxNumOrientations);
-    }
+	final static SettingsModelIntegerBounded createNumOrientationsModel(
+			int maxNumOrientations) {
+		return new SettingsModelIntegerBounded("max_num_orientations",
+				maxNumOrientations, 1, maxNumOrientations);
+	}
 
-    final static SettingsModelString createOrientationDimLabelModel() {
-        return new SettingsModelString("orientation_dim_label",
-                DEFAULT_ORIENTATION_DIM_LABEL);
-    }
+	final static SettingsModelString createOrientationDimLabelModel() {
+		return new SettingsModelString("orientation_dim_label",
+				DEFAULT_ORIENTATION_DIM_LABEL);
+	}
 
-    final static SettingsModelString createFeatureDimLabelModel() {
-        return new SettingsModelString("feature_dim_label",
-                DEFAULT_FEATURE_DIM_LABEL);
-    }
+	final static SettingsModelString createFeatureDimLabelModel() {
+		return new SettingsModelString("feature_dim_label",
+				DEFAULT_FEATURE_DIM_LABEL);
+	}
 
-    private SettingsModelStringArray m_activeFeatureSets =
-            createActiveFeatureSetModel();
+	private SettingsModelStringArray m_activeFeatureSets = createActiveFeatureSetModel();
 
-    private SettingsModelIntegerBounded m_smNumOrientations;
+	private SettingsModelIntegerBounded m_smNumOrientations;
 
-    private SettingsModelString m_smFeatDimLabel;
+	private SettingsModelString m_smFeatDimLabel;
 
-    private SettingsModelString m_smOrientationDimLabel;
+	private SettingsModelString m_smOrientationDimLabel;
 
-    private PixFeatureFactory<T> m_featFac;
+	private PixFeatureFactory<T> m_featFac;
 
-    private final PixFeatureSetProvider[] m_pixFeatProviders;
+	private final PixFeatureSetProvider[] m_pixFeatProviders;
 
-    private final int m_pixFeatDimensionality;
+	private final int m_pixFeatDimensionality;
 
-    private ImgPlusCellFactory m_imgCellFactory;
+	private ImgPlusCellFactory m_imgCellFactory;
 
-    public PixFeaturesNodeModel(PixFeatureSetProvider[] pixFeatProviders,
-            int pixFeatDim, int maxNumOrientations) {
-        super();
-        m_pixFeatProviders = pixFeatProviders;
-        m_pixFeatDimensionality = pixFeatDim;
-        m_smNumOrientations = createNumOrientationsModel(maxNumOrientations);
-        m_smFeatDimLabel = createFeatureDimLabelModel();
-        m_smOrientationDimLabel = createOrientationDimLabelModel();
-        if (maxNumOrientations == 1) {
-            m_smNumOrientations.setEnabled(false);
-            m_smOrientationDimLabel.setEnabled(false);
-        }
+	public PixFeaturesNodeModel(PixFeatureSetProvider[] pixFeatProviders,
+			int pixFeatDim, int maxNumOrientations) {
+		super();
+		m_pixFeatProviders = pixFeatProviders;
+		m_pixFeatDimensionality = pixFeatDim;
+		m_smNumOrientations = createNumOrientationsModel(maxNumOrientations);
+		m_smFeatDimLabel = createFeatureDimLabelModel();
+		m_smOrientationDimLabel = createOrientationDimLabelModel();
+		if (maxNumOrientations == 1) {
+			m_smNumOrientations.setEnabled(false);
+			m_smOrientationDimLabel.setEnabled(false);
+		}
 
-    }
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void addSettingsModels(List<SettingsModel> settingsModels) {
-        settingsModels.add(m_activeFeatureSets);
-        settingsModels.add(m_smNumOrientations);
-        settingsModels.add(m_smOrientationDimLabel);
-        settingsModels.add(m_smFeatDimLabel);
-        for (PixFeatureSetProvider<T> p : m_pixFeatProviders) {
-            p.initAndAddSettingsModels(settingsModels);
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void addSettingsModels(List<SettingsModel> settingsModels) {
+		settingsModels.add(m_activeFeatureSets);
+		settingsModels.add(m_smNumOrientations);
+		settingsModels.add(m_smOrientationDimLabel);
+		settingsModels.add(m_smFeatDimLabel);
+		for (PixFeatureSetProvider<T> p : m_pixFeatProviders) {
+			p.initAndAddSettingsModels(settingsModels);
+		}
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void prepareExecute(ExecutionContext exec) {
-        // create feature factory
-        Set<String> active =
-                new HashSet<String>(Arrays.asList(m_activeFeatureSets
-                        .getStringArrayValue()));
-        List<PixFeatureSet<T>> featSets =
-                new ArrayList<PixFeatureSet<T>>(m_pixFeatProviders.length);
-        for (PixFeatureSetProvider<T> p : m_pixFeatProviders) {
-            if (active.contains(p.getFeatureSetId())) {
-                featSets.add(p.getPixFeatureSet(m_smNumOrientations
-                        .getIntValue()));
-            }
-        }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void prepareExecute(ExecutionContext exec) {
+		// create feature factory
+		Set<String> active = new HashSet<String>(
+				Arrays.asList(m_activeFeatureSets.getStringArrayValue()));
+		List<PixFeatureSet<T>> featSets = new ArrayList<PixFeatureSet<T>>(
+				m_pixFeatProviders.length);
+		for (PixFeatureSetProvider<T> p : m_pixFeatProviders) {
+			if (active.contains(p.getFeatureSetId())) {
+				featSets.add(p.getPixFeatureSet(m_smNumOrientations
+						.getIntValue()));
+			}
+		}
 
-        m_featFac = new PixFeatureFactory<T>(featSets);
+		m_featFac = new PixFeatureFactory<T>(featSets);
 
-        m_imgCellFactory = new ImgPlusCellFactory(exec);
-    }
+		m_imgCellFactory = new ImgPlusCellFactory(exec);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected ImgPlusCell<UnsignedByteType> compute(ImgPlusValue<T> cellValue)
-            throws Exception {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected ImgPlusCell<UnsignedByteType> compute(ImgPlusValue<T> cellValue)
+			throws Exception {
 
-        ImgPlus<FloatType> featImg =
-                new ImgPlus(m_featFac.makeFeatureImage(cellValue.getImgPlus(),
-                        m_pixFeatDimensionality,
-                        m_smNumOrientations.getIntValue()));
+		ImgPlus<FloatType> featImg = new ImgPlus(m_featFac.makeFeatureImage(
+				cellValue.getImgPlus(), m_pixFeatDimensionality,
+				m_smNumOrientations.getIntValue()));
 
-        // normalize image interval plane-wise
-        SubsetOperations.iterate(new ImgPlusNormalize<FloatType>(0,
-                new FloatType(), null, false), new int[]{0, 1}, featImg,
-                featImg);
+		// normalize image interval plane-wise
+		SubsetOperations.iterate(new ImgPlusNormalize<FloatType>(0,
+				new FloatType(), null, false), new int[] { 0, 1 }, featImg,
+				featImg);
 
-        Img<UnsignedByteType> res =
-                ImgUtils.createEmptyCopy(featImg, new UnsignedByteType());
-        ImgConvert<FloatType, UnsignedByteType> convert =
-                new ImgConvert<FloatType, UnsignedByteType>(new FloatType(),
-                        new UnsignedByteType(), ImgConversionTypes.SCALE,
-                        res.factory());
-        convert.compute((RandomAccessibleInterval<FloatType>)featImg, res);
-        ImgPlusMetadata metadata = cellValue.getMetadata();
-        if (m_smNumOrientations.getIntValue() > 1) {
-            List<CalibratedAxis> axes =
-                    new ArrayList<CalibratedAxis>(metadata.numDimensions() + 1);
-            for (int i = 0; i < metadata.numDimensions(); i++) {
-                axes.add(metadata.axis(i));
-            }
-            axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel
-                    .getStringValue())));
-            axes.add(new DefaultLinearAxis(Axes.get(m_smOrientationDimLabel
-                    .getStringValue())));
-            return m_imgCellFactory.createCell(res, new DefaultImgMetadata(
-                    new DefaultCalibratedSpace(axes), metadata, metadata,
-                    metadata));
-        } else {
-            List<CalibratedAxis> axes =
-                    new ArrayList<CalibratedAxis>(metadata.numDimensions() + 1);
-            for (int i = 0; i < metadata.numDimensions(); i++) {
-                axes.add(metadata.axis(i));
-            }
-            axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel
-                    .getStringValue())));
-            return m_imgCellFactory.createCell(res, new DefaultImgMetadata(
-                    new DefaultCalibratedSpace(axes), metadata, metadata,
-                    metadata));
-        }
-    }
+		Img<UnsignedByteType> res = (Img<UnsignedByteType>) KNIPGateway.ops()
+				.createImg(featImg, new UnsignedByteType());
+		ImgConvert<FloatType, UnsignedByteType> convert = new ImgConvert<FloatType, UnsignedByteType>(
+				new FloatType(), new UnsignedByteType(),
+				ImgConversionTypes.SCALE, res.factory());
+		convert.compute((RandomAccessibleInterval<FloatType>) featImg, res);
+		ImgPlusMetadata metadata = cellValue.getMetadata();
+		if (m_smNumOrientations.getIntValue() > 1) {
+			List<CalibratedAxis> axes = new ArrayList<CalibratedAxis>(
+					metadata.numDimensions() + 1);
+			for (int i = 0; i < metadata.numDimensions(); i++) {
+				axes.add(metadata.axis(i));
+			}
+			axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel
+					.getStringValue())));
+			axes.add(new DefaultLinearAxis(Axes.get(m_smOrientationDimLabel
+					.getStringValue())));
+			return m_imgCellFactory.createCell(res, new DefaultImgMetadata(
+					new DefaultCalibratedSpace(axes), metadata, metadata,
+					metadata));
+		} else {
+			List<CalibratedAxis> axes = new ArrayList<CalibratedAxis>(
+					metadata.numDimensions() + 1);
+			for (int i = 0; i < metadata.numDimensions(); i++) {
+				axes.add(metadata.axis(i));
+			}
+			axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel
+					.getStringValue())));
+			return m_imgCellFactory.createCell(res, new DefaultImgMetadata(
+					new DefaultCalibratedSpace(axes), metadata, metadata,
+					metadata));
+		}
+	}
 }

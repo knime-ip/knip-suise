@@ -64,17 +64,15 @@ import net.imglib2.histogram.Histogram1d;
 import net.imglib2.histogram.Integer1dBinMapper;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
-import net.imglib2.labeling.Labeling;
-import net.imglib2.labeling.NativeImgLabeling;
 import net.imglib2.ops.operation.iterableinterval.unary.MakeHistogram;
 import net.imglib2.ops.operation.randomaccessible.binary.FloodFill;
 import net.imglib2.ops.operation.randomaccessible.unary.FillHoles;
 import net.imglib2.ops.operation.randomaccessibleinterval.unary.regiongrowing.CCA;
 import net.imglib2.ops.types.ConnectedType;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.node.ExecutionContext;
@@ -89,6 +87,7 @@ import org.knime.knip.base.exceptions.KNIPRuntimeException;
 import org.knime.knip.base.node.ValueToCellNodeDialog;
 import org.knime.knip.base.node.ValueToCellNodeFactory;
 import org.knime.knip.base.node.ValueToCellNodeModel;
+import org.knime.knip.core.KNIPGateway;
 import org.knime.knip.core.data.img.DefaultLabelingMetadata;
 import org.knime.knip.core.util.NeighborhoodUtils;
 
@@ -145,7 +144,8 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 			private ExecutionContext m_exec;
 
 			@Override
-			protected void addSettingsModels(final List<SettingsModel> settingsModels) {
+			protected void addSettingsModels(
+					final List<SettingsModel> settingsModels) {
 				settingsModels.add(m_smMinBoundaryPixNum);
 				settingsModels.add(m_smMinPixIntensity);
 
@@ -161,8 +161,8 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 			}
 
 			@Override
-			protected LabelingCell<Integer> compute(final ImgPlusValue<T> cellValue)
-					throws Exception {
+			protected LabelingCell<Integer> compute(
+					final ImgPlusValue<T> cellValue) throws Exception {
 				final ImgPlus<T> img = cellValue.getImgPlus();
 				if (!(img.firstElement().createVariable() instanceof IntegerType)) {
 					throw new ImageTypeNotCompatibleException("UCMRegions",
@@ -177,7 +177,9 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 				Img<BitType> th1 = null;
 
 				final Histogram1d<T> hist = new Histogram1d<T>(
-						new Integer1dBinMapper<T>((int)img.firstElement().getMinValue(), (int)img.firstElement().getMaxValue(), false));
+						new Integer1dBinMapper<T>((int) img.firstElement()
+								.getMinValue(), (int) img.firstElement()
+								.getMaxValue(), false));
 				new MakeHistogram<T>((int) hist.getBinCount()).compute(img,
 						hist);
 
@@ -188,21 +190,20 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 				final CCA<BitType> cca = new CCA<BitType>(
 						NeighborhoodUtils.get4ConStructuringElement(img
 								.numDimensions()), new BitType());
-				final Labeling<Integer> res = new NativeImgLabeling<Integer, IntType>(
-						img.factory().imgFactory(new IntType())
-								.create(img, new IntType()));
+				final RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
+						.ops().createImgLabeling(img);
 				for (long i = hist.getBinCount() - 1; i >= m_smMinPixIntensity
 						.getIntValue(); i--) {
 					if (hist.frequency(i) <= m_smMinBoundaryPixNum
 							.getIntValue()) {
 						continue;
 					}
-					
+
 					m_exec.checkCanceled();
-//					break;
+					// break;
 
 					System.out.println(hist.frequency(i));
-					
+
 					final ThresholdConverter<T> c = new ThresholdConverter<T>(i);
 
 					// thresholded image at all available levels
@@ -212,7 +213,8 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 									new BitType()), img.factory().imgFactory(
 									new BitType()));
 					final Cursor<BitType> th1C = th1.localizingCursor();
-					final Cursor<BitType> th0C = th0 == null ? null : th0.cursor();
+					final Cursor<BitType> th0C = th0 == null ? null : th0
+							.cursor();
 					Cursor<BitType> lcC = levelComps.cursor();
 					while (th1C.hasNext()) {
 						th1C.fwd();
@@ -252,7 +254,8 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 						t.set(false);
 					}
 				}
-				if (res.getLabels().size() == 0) {
+				if (KNIPGateway.regions().regions(res).getExistingLabels()
+						.size() == 0) {
 					throw new KNIPRuntimeException("Empty labeling!");
 				} else {
 					return m_cellFactory.createCell(res,

@@ -61,6 +61,7 @@ import net.imglib2.labeling.Labeling;
 import net.imglib2.ops.operation.UnaryOperation;
 import net.imglib2.ops.operation.iterableinterval.unary.MakeHistogram;
 import net.imglib2.ops.operation.randomaccessibleinterval.unary.regiongrowing.CCA;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.IntegerType;
@@ -74,105 +75,102 @@ import net.imglib2.type.numeric.integer.LongType;
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
 public class LevelCCA<T extends IntegerType<T> & NativeType<T>> implements
-        UnaryOperation<Img<T>, Labeling<Integer>> {
+		UnaryOperation<Img<T>, RandomAccessibleInterval<LabelingType<Integer>>> {
 
-    private final long[][] m_structuringElement;
+	private final long[][] m_structuringElement;
 
-    private final boolean m_whiteBackground;
+	private final boolean m_whiteBackground;
 
-    private final int m_lowerBound;
+	private final int m_lowerBound;
 
-    private final int m_upperBound;
+	private final int m_upperBound;
 
-    private final int m_stepSize;
+	private final int m_stepSize;
 
-    public LevelCCA(long[][] structuringElement, boolean whiteBackground) {
-        this(structuringElement, whiteBackground, Integer.MIN_VALUE,
-                Integer.MAX_VALUE, 1);
+	public LevelCCA(long[][] structuringElement, boolean whiteBackground) {
+		this(structuringElement, whiteBackground, Integer.MIN_VALUE,
+				Integer.MAX_VALUE, 1);
 
-    }
+	}
 
-    public LevelCCA(long[][] structuringElement, boolean whiteBackground,
-            int lowerBound, int upperBound, int stepSize) {
-        m_structuringElement = structuringElement;
-        m_whiteBackground = whiteBackground;
-        m_lowerBound = lowerBound;
-        m_upperBound = upperBound;
-        m_stepSize = stepSize;
-    }
+	public LevelCCA(long[][] structuringElement, boolean whiteBackground,
+			int lowerBound, int upperBound, int stepSize) {
+		m_structuringElement = structuringElement;
+		m_whiteBackground = whiteBackground;
+		m_lowerBound = lowerBound;
+		m_upperBound = upperBound;
+		m_stepSize = stepSize;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Labeling<Integer> compute(Img<T> input, Labeling<Integer> output) {
-        CCA<BitType> cca =
-                new CCA<BitType>(m_structuringElement, new BitType(
-                        m_whiteBackground));
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public RandomAccessibleInterval<LabelingType<Integer>> compute(
+			Img<T> input, RandomAccessibleInterval<LabelingType<Integer>> output) {
+		CCA<BitType> cca = new CCA<BitType>(m_structuringElement, new BitType(
+				m_whiteBackground));
 
-        Histogram1d<T> hist =
-                new Histogram1d<T>(new Integer1dBinMapper<T>(0, 255, false));
-        RandomAccess<LongType> raHist = hist.randomAccess();
-        new MakeHistogram<T>((int)hist.getBinCount()).compute(input, hist);
-        ThresholdConverter<T> c = new ThresholdConverter<T>(0);
-        T type = input.firstElement().createVariable();
-        long lastCountSum = 0;
-        for (int i = 0; i < hist.getBinCount(); i += m_stepSize) {
-            raHist.setPosition(i, 0);
-            lastCountSum += raHist.get().getIntegerLong();
-            if (i < m_lowerBound || i > m_upperBound || lastCountSum == 0) {
-                continue;
-            }
-            lastCountSum = 0;
-            hist.getCenterValue(i, type);
-            c.setThreshold(type.getRealDouble());
-            Img<BitType> tmp = null;
-            try {
-                tmp =
-                        new ImgView<BitType>(Converters.convert(
-                                (RandomAccessibleInterval<T>)input, c,
-                                new BitType()), input.factory().imgFactory(
-                                new BitType()));
-            } catch (IncompatibleTypeException e) {
-                throw new RuntimeException(e);
-            }
-            cca.compute(tmp, output);
-        }
+		Histogram1d<T> hist = new Histogram1d<T>(new Integer1dBinMapper<T>(0,
+				255, false));
+		RandomAccess<LongType> raHist = hist.randomAccess();
+		new MakeHistogram<T>((int) hist.getBinCount()).compute(input, hist);
+		ThresholdConverter<T> c = new ThresholdConverter<T>(0);
+		T type = input.firstElement().createVariable();
+		long lastCountSum = 0;
+		for (int i = 0; i < hist.getBinCount(); i += m_stepSize) {
+			raHist.setPosition(i, 0);
+			lastCountSum += raHist.get().getIntegerLong();
+			if (i < m_lowerBound || i > m_upperBound || lastCountSum == 0) {
+				continue;
+			}
+			lastCountSum = 0;
+			hist.getCenterValue(i, type);
+			c.setThreshold(type.getRealDouble());
+			Img<BitType> tmp = null;
+			try {
+				tmp = new ImgView<BitType>(Converters.convert(
+						(RandomAccessibleInterval<T>) input, c, new BitType()),
+						input.factory().imgFactory(new BitType()));
+			} catch (IncompatibleTypeException e) {
+				throw new RuntimeException(e);
+			}
+			cca.compute(tmp, output);
+		}
 
-        return output;
-    }
+		return output;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public UnaryOperation<Img<T>, Labeling<Integer>> copy() {
-        return null;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	public UnaryOperation<Img<T>, RandomAccessibleInterval<LabelingType<Integer>>> copy() {
+		return null;
+	}
 
-    private class ThresholdConverter<T extends RealType<T>> implements
-            Converter<T, BitType> {
+	private class ThresholdConverter<T extends RealType<T>> implements
+			Converter<T, BitType> {
 
-        private double m_threshold;
+		private double m_threshold;
 
-        private BitType m_type;
+		private BitType m_type;
 
-        public ThresholdConverter(double threshold) {
-            m_threshold = threshold;
-            m_type = new BitType();
+		public ThresholdConverter(double threshold) {
+			m_threshold = threshold;
+			m_type = new BitType();
 
-        }
+		}
 
-        public void setThreshold(double t) {
-            m_threshold = t;
-        }
+		public void setThreshold(double t) {
+			m_threshold = t;
+		}
 
-        /**
-         * {@inheritDoc}
-         */
-        public void convert(T input, BitType output) {
-            output.set(input.getRealDouble() >= m_threshold);
-
-        }
-    }
+		/**
+		 * {@inheritDoc}
+		 */
+		public void convert(T input, BitType output) {
+			output.set(input.getRealDouble() >= m_threshold);
+		}
+	}
 
 }
