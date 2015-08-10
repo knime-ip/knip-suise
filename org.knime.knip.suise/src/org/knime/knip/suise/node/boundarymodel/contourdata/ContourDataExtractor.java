@@ -79,8 +79,8 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 	protected int CENTER_COL;
 
 	/**
-     * 
-     */
+	 * 
+	 */
 	public void extractContourData(ContourDataGrid cDataGrid) {
 		m_cDataGrid = cDataGrid;
 		CENTER_COL = cDataGrid.width() / 2;
@@ -104,8 +104,7 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 	 * @param translations
 	 * @param permutation
 	 */
-	protected abstract void extractContourData(int[] translations,
-			int[] permutation);
+	protected abstract void extractContourData(int[] translations, int[] permutation);
 
 	/**
 	 * {@inheritDoc}
@@ -176,8 +175,7 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 	}
 
 	public List<double[]> nonContourVectors() {
-		List<double[]> res = new ArrayList<double[]>(m_cDataGrid.numVectors()
-				- m_cDataGrid.totalLength());
+		List<double[]> res = new ArrayList<double[]>(m_cDataGrid.numVectors() - m_cDataGrid.totalLength());
 		for (int i = 0; i < m_cDataGrid.width(); i++) {
 			for (int j = 0; j < m_cDataGrid.totalLength(); j++) {
 				if (i != CENTER_COL + m_translations[j]) {
@@ -201,24 +199,18 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 		// continuity determination
 		double res = 0;
 		for (int i = 1; i < m_translations.length; i++) {
-			res = Math.max(res,
-					Math.abs(m_translations[i] - m_translations[i - 1])
-							* weight(i) * weight(i - 1));
+			res = Math.max(res, Math.abs(m_translations[i] - m_translations[i - 1]) * weight(i) * weight(i - 1));
 		}
-		res = Math.max(
-				res,
-				Math.abs(m_translations[0]
-						- m_translations[m_translations.length - 1])
-						* weight(0) * weight(m_translations.length - 1));
+		res = Math.max(res, Math.abs(m_translations[0] - m_translations[m_translations.length - 1]) * weight(0)
+				* weight(m_translations.length - 1));
 		return res;
 	}
 
-	public RandomAccessibleInterval<LabelingType<Integer>> clusterDistrLabeling(
-			Integer bgCluster) {
+	public RandomAccessibleInterval<LabelingType<Integer>> clusterDistrLabeling(Integer bgCluster) {
 		// read labeling mapping and create labeling
 		long[] dims = new long[] { m_cDataGrid.width(), numVectors() };
 		RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
-				.ops().createImgLabeling(dims);
+				.ops().create().imgLabeling(dims);
 
 		RandomAccess<LabelingType<Integer>> ra = res.randomAccess();
 		for (int h = 0; h < res.dimension(1); h++) {
@@ -244,8 +236,7 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 	/*
 	 * Debugging
 	 */
-	public <T extends RealType<T>> Img<T> transformContourImage(
-			Img<T> contourImg) {
+	public <T extends RealType<T>> Img<T> transformContourImage(Img<T> contourImg) {
 
 		Img<T> res = contourImg.copy();
 		RandomAccess<T> resRA = res.randomAccess();
@@ -253,10 +244,8 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 
 		while (srcCur.hasNext()) {
 			srcCur.fwd();
-			resRA.setPosition(
-					(srcCur.getIntPosition(0)
-							- m_translations[srcCur.getIntPosition(1)] + res
-								.dimension(0)) % res.dimension(0), 0);
+			resRA.setPosition((srcCur.getIntPosition(0) - m_translations[srcCur.getIntPosition(1)] + res.dimension(0))
+					% res.dimension(0), 0);
 			resRA.setPosition(m_permutation[srcCur.getIntPosition(1)], 1);
 			resRA.get().set(srcCur.get());
 		}

@@ -94,8 +94,7 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 		implements PixFeatureSet<T>, FeatImgGenerator<F> {
 
 	private final ExecutorService m_executorService = new ThreadPoolExecutorService(
-			KNIMEConstants.GLOBAL_THREAD_POOL
-					.createSubPool(KNIPConstants.THREADS_PER_NODE));
+			KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool(KNIPConstants.THREADS_PER_NODE));
 
 	private Img<DoubleType>[] m_filters;
 
@@ -143,8 +142,7 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 		// no-op
 	}
 
-	public GaborFilterFeatureSet(final double[] scales,
-			final double[] frequencies, final double[] elongations,
+	public GaborFilterFeatureSet(final double[] scales, final double[] frequencies, final double[] elongations,
 			final int radius, final int numAng, F type) {
 		this(scales, frequencies, elongations, radius, numAng, true, type);
 	}
@@ -162,8 +160,7 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 	 *            averages over the given number of angles, thus, updating the
 	 *            angle has no effect
 	 */
-	public GaborFilterFeatureSet(final double[] scales,
-			final double[] frequencies, final double[] elongations,
+	public GaborFilterFeatureSet(final double[] scales, final double[] frequencies, final double[] elongations,
 			final int radius, final int numAng, boolean precalcFeatures, F type) {
 		super();
 
@@ -183,8 +180,7 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 		m_halfNumAng = m_numAng / 2;
 
 		// the total number of filters including the varied angles
-		int numFilters = m_halfNumAng * m_scales.length * m_frequencies.length
-				* m_elongations.length * 2;
+		int numFilters = m_halfNumAng * m_scales.length * m_frequencies.length * m_elongations.length * 2;
 
 		// create filter for the individual parameters
 		m_filters = new Img[numFilters];
@@ -206,21 +202,17 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 			for (int s = 0; s < m_scales.length; s++) {
 				for (int f = 0; f < m_frequencies.length; f++) {
 					for (int e = 0; e < m_elongations.length; e++) {
-						Gabor g = new Gabor(m_radius, ang, m_scales[s],
-								m_frequencies[f], m_elongations[e]);
+						Gabor g = new Gabor(m_radius, ang, m_scales[s], m_frequencies[f], m_elongations[e]);
 						for (int evenodd = 0; evenodd < 2; evenodd++) {
 
 							try {
-								m_filters[filterIndex] = g.factory()
-										.imgFactory(new DoubleType())
-										.create(g, new DoubleType());
+								m_filters[filterIndex] = g.factory().imgFactory(new DoubleType()).create(g,
+										new DoubleType());
 
 								if (evenodd == 0) {
-									realAssignment.compute(g,
-											m_filters[filterIndex]);
+									realAssignment.compute(g, m_filters[filterIndex]);
 								} else {
-									imaginaryAssignment.compute(g,
-											m_filters[filterIndex]);
+									imaginaryAssignment.compute(g, m_filters[filterIndex]);
 								}
 
 							} catch (IncompatibleTypeException e1) {
@@ -231,14 +223,10 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 
 							if (evenodd == 0) {
 								double sub = new Sum<DoubleType, DoubleType>()
-										.compute(
-												m_filters[filterIndex].cursor(),
-												new DoubleType()).get()
+										.compute(m_filters[filterIndex].cursor(), new DoubleType()).get()
 										/ (g.dimension(0) * g.dimension(1));
-								new UnaryConstantRightAssignment(new RealAdd())
-										.compute(m_filters[filterIndex],
-												new DoubleType((float) -sub),
-												m_filters[filterIndex]);
+								new UnaryConstantRightAssignment(new RealAdd()).compute(m_filters[filterIndex],
+										new DoubleType((float) -sub), m_filters[filterIndex]);
 
 								// m_filters[filterIndex]
 								// .uAdd(-m_filters[filterIndex].aSum()
@@ -255,14 +243,8 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 							// f, e, evenodd == 0,
 							// a));
 
-							m_names[filterIndex++
-									% (m_filters.length / m_halfNumAng)] = "Gabor[s="
-									+ m_scales[s]
-									+ ";f="
-									+ m_frequencies[f]
-									+ ";e="
-									+ m_elongations[e]
-									+ ";"
+							m_names[filterIndex++ % (m_filters.length / m_halfNumAng)] = "Gabor[s=" + m_scales[s]
+									+ ";f=" + m_frequencies[f] + ";e=" + m_elongations[e] + ";"
 									+ (evenodd == 0 ? "even" : "odd") + "]";
 
 						}
@@ -341,8 +323,8 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 			// m_numFeatures
 			// + getCurrentFeatureID()].get(x - m_filterSizeX / 2, y
 			// - m_filterSizeY / 2);
-			RandomAccess<F> tmpFeatRandAccess = m_convolvedImgRandAccess[m_currentAngID
-					% m_halfNumAng * m_numFeatures + id];
+			RandomAccess<F> tmpFeatRandAccess = m_convolvedImgRandAccess[m_currentAngID % m_halfNumAng * m_numFeatures
+					+ id];
 			tmpFeatRandAccess.setPosition(m_pos[0], 0);
 			tmpFeatRandAccess.setPosition(m_pos[1], 1);
 			res = tmpFeatRandAccess.get().getRealDouble();
@@ -359,8 +341,8 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 			}
 
 		} else {
-			res = convolve(m_tmpSrcRandAccess, m_filterCursors[m_currentAngID
-					% m_halfNumAng * m_numFeatures + id], m_pos, m_kernelRadii);
+			res = convolve(m_tmpSrcRandAccess, m_filterCursors[m_currentAngID % m_halfNumAng * m_numFeatures + id],
+					m_pos, m_kernelRadii);
 
 			// if the current filter is odd and the choosen
 			// angle bigger
@@ -393,13 +375,11 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 		m_convolvedImgs = new Img[m_filters.length];
 		m_convolvedImgRandAccess = new RandomAccess[m_filters.length];
 
-		Convolver<T, DoubleType, F> ics = new ImgLib2FourierConvolver<T, DoubleType, F>(
-				m_executorService);
+		Convolver<T, DoubleType, F> ics = new ImgLib2FourierConvolver<T, DoubleType, F>(m_executorService);
 
 		for (int i = 0; i < m_filters.length; i++) {
 			try {
-				m_convolvedImgs[i] = m_img.factory().imgFactory(m_featureType)
-						.create(m_img, m_featureType);
+				m_convolvedImgs[i] = m_img.factory().imgFactory(m_featureType).create(m_img, m_featureType);
 			} catch (IncompatibleTypeException e) {
 			}
 			ics.compute(m_extendedImg, m_filters[i], m_convolvedImgs[i]);
@@ -413,25 +393,20 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 			Img<DoubleType> img = m_filters[i];
 			int angIdx = i / (m_filters.length / m_numAng);
 			double ang = angIdx * Math.PI * (1.0 / m_halfNumAng);
-			String name = m_names[i % (m_filters.length / m_halfNumAng)]
-					+ "angIdx:" + angIdx + ";ang:" + ang;
+			String name = m_names[i % (m_filters.length / m_halfNumAng)] + "angIdx:" + angIdx + ";ang:" + ang;
 
-			Img<FloatType> floatImg = (Img<FloatType>) KNIPGateway.ops()
-					.createImg(img, new FloatType());
-			new ImgConvert<DoubleType, FloatType>(new DoubleType(),
-					new FloatType(), ImgConvert.ImgConversionTypes.DIRECT,
-					floatImg.factory()).compute(img, floatImg);
+			Img<FloatType> floatImg = (Img<FloatType>) KNIPGateway.ops().create().img(img, new FloatType());
+			new ImgConvert<DoubleType, FloatType>(new DoubleType(), new FloatType(),
+					ImgConvert.ImgConversionTypes.DIRECT, floatImg.factory()).compute(img, floatImg);
 
 			// normalize
-			Pair<FloatType, FloatType> minmax = Operations.compute(
-					new MinMax<FloatType>(), floatImg);
-			Operations.<FloatType, FloatType> map(
-					new Normalize<FloatType>(minmax.getA().getRealDouble(),
-							minmax.getB().getRealDouble(), -Float.MAX_VALUE,
-							Float.MAX_VALUE)).compute(floatImg, floatImg);
+			Pair<FloatType, FloatType> minmax = Operations.compute(new MinMax<FloatType>(), floatImg);
+			Operations
+					.<FloatType, FloatType> map(new Normalize<FloatType>(minmax.getA().getRealDouble(),
+							minmax.getB().getRealDouble(), -Float.MAX_VALUE, Float.MAX_VALUE))
+					.compute(floatImg, floatImg);
 
-			org.knime.knip.core.awt.AWTImageTools
-					.showInFrame(floatImg, name, 5);
+			org.knime.knip.core.awt.AWTImageTools.showInFrame(floatImg, name, 5);
 
 		}
 
@@ -516,8 +491,7 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 		// .proc(img);
 
 		GaborFilterFeatureSet<DoubleType, FloatType> gfb = new GaborFilterFeatureSet<DoubleType, FloatType>(
-				new double[] { .25f, .5f }, new double[] { 1 },
-				new double[] { 1 }, 20, 12, true, new FloatType());
+				new double[] { .25f, .5f }, new double[] { 1 }, new double[] { 1 }, 20, 12, true, new FloatType());
 		// gfb.getFeatureTarget().setImage(fimg);
 
 		gfb.showFilterBank();
@@ -529,15 +503,12 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void generateFeatImg(RandomAccessibleInterval<F> featImg,
-			int featID, Dart d) {
+	public void generateFeatImg(RandomAccessibleInterval<F> featImg, int featID, Dart d) {
 
 		int angleID = d.directionIndex();
 
-		Convolver<T, DoubleType, F> ics = new ImgLib2FourierConvolver<T, DoubleType, F>(
-				m_executorService);
-		Img<DoubleType> filter = m_filters[angleID % m_halfNumAng
-				* m_numFeatures + featID];
+		Convolver<T, DoubleType, F> ics = new ImgLib2FourierConvolver<T, DoubleType, F>(m_executorService);
+		Img<DoubleType> filter = m_filters[angleID % m_halfNumAng * m_numFeatures + featID];
 
 		// if the current filter is odd and the choosen
 		// angle bigger
@@ -572,9 +543,8 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 	 * 
 	 * @return
 	 */
-	public final static <KT extends RealType<KT>, T extends RealType<T>> float convolve(
-			final RandomAccess<T> srcRA, final Cursor<KT> kerC,
-			final long[] pos, final long[] kernelRadii) {
+	public final static <KT extends RealType<KT>, T extends RealType<T>> float convolve(final RandomAccess<T> srcRA,
+			final Cursor<KT> kerC, final long[] pos, final long[] kernelRadii) {
 
 		float val = 0;
 
@@ -587,8 +557,7 @@ public class GaborFilterFeatureSet<T extends RealType<T>, F extends RealType<F>>
 				if (kernelRadii[i] > 0) { // dimension can have
 											// zero extension e.g.
 											// vertical 1d kernel
-					srcRA.setPosition(pos[i] + kerC.getLongPosition(i)
-							- kernelRadii[i], i);
+					srcRA.setPosition(pos[i] + kerC.getLongPosition(i) - kernelRadii[i], i);
 				}
 			}
 

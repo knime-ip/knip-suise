@@ -91,8 +91,7 @@ public class LevelCCANodeFactory<T extends IntegerType<T> & NativeType<T>>
 		extends ValueToCellNodeFactory<ImgPlusValue<T>> {
 
 	private static SettingsModelString createTypeModel() {
-		return new SettingsModelString("connection_type",
-				ConnectedType.values()[0].toString());
+		return new SettingsModelString("connection_type", ConnectedType.values()[0].toString());
 	}
 
 	private static SettingsModelBoolean createBackgroundModel() {
@@ -139,28 +138,20 @@ public class LevelCCANodeFactory<T extends IntegerType<T> & NativeType<T>>
 			}
 
 			@Override
-			protected LabelingCell<Integer> compute(ImgPlusValue<T> cellValue)
-					throws Exception {
+			protected LabelingCell<Integer> compute(ImgPlusValue<T> cellValue) throws Exception {
 				ImgPlus<T> img = cellValue.getImgPlus();
 
 				long[][] structuringElement;
-				if (m_type.getStringValue().equals(
-						ConnectedType.EIGHT_CONNECTED.name())) {
-					structuringElement = AbstractRegionGrowing
-							.get8ConStructuringElement(img.numDimensions());
+				if (m_type.getStringValue().equals(ConnectedType.EIGHT_CONNECTED.name())) {
+					structuringElement = AbstractRegionGrowing.get8ConStructuringElement(img.numDimensions());
 				} else {
-					structuringElement = AbstractRegionGrowing
-							.get4ConStructuringElement(img.numDimensions());
+					structuringElement = AbstractRegionGrowing.get4ConStructuringElement(img.numDimensions());
 				}
 
-				RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
-						.ops().createImgLabeling(img);
-				new LevelCCA<T>(structuringElement,
-						m_background.getBooleanValue(),
-						m_lowerBound.getIntValue(), m_upperBound.getIntValue(),
-						m_stepSize.getIntValue()).compute(img, res);
-				return m_labelingCellFactory.createCell(res,
-						new DefaultLabelingMetadata(img, img, img, null));
+				RandomAccessibleInterval<LabelingType<Integer>> res = KNIPGateway.ops().create().imgLabeling(img);
+				new LevelCCA<T>(structuringElement, m_background.getBooleanValue(), m_lowerBound.getIntValue(),
+						m_upperBound.getIntValue(), m_stepSize.getIntValue()).compute(img, res);
+				return m_labelingCellFactory.createCell(res, new DefaultLabelingMetadata(img, img, img, null));
 			}
 
 			@Override
@@ -183,34 +174,19 @@ public class LevelCCANodeFactory<T extends IntegerType<T> & NativeType<T>>
 
 			@Override
 			public void addDialogComponents() {
-				addDialogComponent(
-						"Options",
-						"Settings",
-						new DialogComponentStringSelection(
-								createTypeModel(),
-								"Connection Type",
-								EnumUtils
-										.getStringListFromToString(ConnectedType
-												.values())));
+				addDialogComponent("Options", "Settings", new DialogComponentStringSelection(createTypeModel(),
+						"Connection Type", EnumUtils.getStringListFromToString(ConnectedType.values())));
 				addDialogComponent("Options", "Settings",
-						new DialogComponentBoolean(createBackgroundModel(),
-								"White background"));
+						new DialogComponentBoolean(createBackgroundModel(), "White background"));
 
-				addDialogComponent(
-						"Options",
-						"Settings",
-						new DialogComponentNumber(createLowerBoundModel(),
-								"Lower pixel value bound (0-255, inclusive)", 1));
+				addDialogComponent("Options", "Settings", new DialogComponentNumber(createLowerBoundModel(),
+						"Lower pixel value bound (0-255, inclusive)", 1));
 
-				addDialogComponent(
-						"Options",
-						"Settings",
-						new DialogComponentNumber(createUpperBoundModel(),
-								"Upper pixel value bound (0-255, inclusive)", 1));
+				addDialogComponent("Options", "Settings", new DialogComponentNumber(createUpperBoundModel(),
+						"Upper pixel value bound (0-255, inclusive)", 1));
 
 				addDialogComponent("Options", "Settings",
-						new DialogComponentNumber(createStepSizeModel(),
-								"Step size", 1));
+						new DialogComponentNumber(createStepSizeModel(), "Step size", 1));
 			}
 		};
 	}

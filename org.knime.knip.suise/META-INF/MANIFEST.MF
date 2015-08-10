@@ -2,15 +2,15 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Supervised Image Segmentation
 Bundle-SymbolicName: org.knime.knip.suise;singleton:=true
 Bundle-ManifestVersion: 2
-Bundle-Version: 0.1.0.qualifier
+Bundle-Version: 0.2.0.qualifier
 Bundle-Vendor: Martin Horn, University of Konstanz
 Eclipse-RegisterBuddy: org.knime.core
-Require-Bundle: org.knime.base;bundle-version="2.10.0",
- org.knime.workbench.repository;bundle-version="2.10.0",
+Require-Bundle: org.knime.base;bundle-version="3.0.0",
+ org.knime.workbench.repository;bundle-version="3.0.0",
  org.eclipse.core.runtime,
  org.eclipse.ui,
- org.knime.knip.base;bundle-version="1.2.0",
- org.knime.knip.core;bundle-version="1.2.0",
+ org.knime.knip.base;bundle-version="1.4.0",
+ org.knime.knip.core;bundle-version="1.4.0",
  imglib2;bundle-version="2.2.0",
  imglib2-roi;bundle-version="0.2.1",
  imagej-common;bundle-version="0.12.0",
@@ -21,8 +21,9 @@ Require-Bundle: org.knime.base;bundle-version="2.10.0",
  scijava-log-slf4j;bundle-version="1.0.2",
  knip-tmp-imglib2-ops;bundle-version="0.1.4",
  slf4j-api;bundle-version="1.7.10",
- slf4j-log4j12;bundle-version="1.7.10"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+ slf4j-log4j12;bundle-version="1.7.10",
+ imagej-ops;bundle-version="0.16.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: lib/weka.jar,
  knip_suise.jar,
  lib/ij-1.48f.jar,

@@ -2,7 +2,7 @@
 <feature
       id="org.knime.knip.suise.update"
       label="KNIME Image Processing - Supervised Image Segmentation"
-      version="0.1.0.qualifier">
+      version="0.2.0.qualifier">
 
    <includes
          id="org.knime.knip.suise.feature"

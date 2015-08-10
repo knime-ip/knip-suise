@@ -97,8 +97,7 @@ import org.knime.knip.core.util.NeighborhoodUtils;
  * 
  * @author hornm, University of Konstanz
  */
-public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
-		ValueToCellNodeFactory<ImgPlusValue<T>> {
+public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends ValueToCellNodeFactory<ImgPlusValue<T>> {
 
 	private static final SettingsModelInteger createMinBoundaryPixNumberModel() {
 		return new SettingsModelInteger("minimum_boundary_pix_number", 0);
@@ -117,12 +116,10 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 
 			@Override
 			public void addDialogComponents() {
-				addDialogComponent("Options", "", new DialogComponentNumber(
-						createMinBoundaryPixNumberModel(),
+				addDialogComponent("Options", "", new DialogComponentNumber(createMinBoundaryPixNumberModel(),
 						"minimum number of boundary pixels", 1));
-				addDialogComponent("Options", "", new DialogComponentNumber(
-						createMinPixIntensityModel(),
-						"minimum pixel intensity", 1));
+				addDialogComponent("Options", "",
+						new DialogComponentNumber(createMinPixIntensityModel(), "minimum pixel intensity", 1));
 
 			}
 		};
@@ -144,8 +141,7 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 			private ExecutionContext m_exec;
 
 			@Override
-			protected void addSettingsModels(
-					final List<SettingsModel> settingsModels) {
+			protected void addSettingsModels(final List<SettingsModel> settingsModels) {
 				settingsModels.add(m_smMinBoundaryPixNum);
 				settingsModels.add(m_smMinPixIntensity);
 
@@ -161,41 +157,28 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 			}
 
 			@Override
-			protected LabelingCell<Integer> compute(
-					final ImgPlusValue<T> cellValue) throws Exception {
+			protected LabelingCell<Integer> compute(final ImgPlusValue<T> cellValue) throws Exception {
 				final ImgPlus<T> img = cellValue.getImgPlus();
 				if (!(img.firstElement().createVariable() instanceof IntegerType)) {
-					throw new ImageTypeNotCompatibleException("UCMRegions",
-							img.firstElement(), IntegerType.class);
+					throw new ImageTypeNotCompatibleException("UCMRegions", img.firstElement(), IntegerType.class);
 				}
-				final Img<BitType> levelComps = img.factory()
-						.imgFactory(new BitType()).create(img, new BitType());
-				final Img<BitType> tmp = levelComps.factory().create(img,
-						new BitType());
+				final Img<BitType> levelComps = img.factory().imgFactory(new BitType()).create(img, new BitType());
+				final Img<BitType> tmp = levelComps.factory().create(img, new BitType());
 
 				Img<BitType> th0 = null;
 				Img<BitType> th1 = null;
 
-				final Histogram1d<T> hist = new Histogram1d<T>(
-						new Integer1dBinMapper<T>((int) img.firstElement()
-								.getMinValue(), (int) img.firstElement()
-								.getMaxValue(), false));
-				new MakeHistogram<T>((int) hist.getBinCount()).compute(img,
-						hist);
+				final Histogram1d<T> hist = new Histogram1d<T>(new Integer1dBinMapper<T>(
+						(int) img.firstElement().getMinValue(), (int) img.firstElement().getMaxValue(), false));
+				new MakeHistogram<T>((int) hist.getBinCount()).compute(img, hist);
 
-				final FloodFill<BitType> floodFill = new FloodFill<BitType>(
-						ConnectedType.EIGHT_CONNECTED);
-				final FillHoles fillHoles = new FillHoles(
-						ConnectedType.FOUR_CONNECTED);
+				final FloodFill<BitType> floodFill = new FloodFill<BitType>(ConnectedType.EIGHT_CONNECTED);
+				final FillHoles fillHoles = new FillHoles(ConnectedType.FOUR_CONNECTED);
 				final CCA<BitType> cca = new CCA<BitType>(
-						NeighborhoodUtils.get4ConStructuringElement(img
-								.numDimensions()), new BitType());
-				final RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
-						.ops().createImgLabeling(img);
-				for (long i = hist.getBinCount() - 1; i >= m_smMinPixIntensity
-						.getIntValue(); i--) {
-					if (hist.frequency(i) <= m_smMinBoundaryPixNum
-							.getIntValue()) {
+						NeighborhoodUtils.get4ConStructuringElement(img.numDimensions()), new BitType());
+				final RandomAccessibleInterval<LabelingType<Integer>> res = KNIPGateway.ops().create().imgLabeling(img);
+				for (long i = hist.getBinCount() - 1; i >= m_smMinPixIntensity.getIntValue(); i--) {
+					if (hist.frequency(i) <= m_smMinBoundaryPixNum.getIntValue()) {
 						continue;
 					}
 
@@ -207,14 +190,10 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 					final ThresholdConverter<T> c = new ThresholdConverter<T>(i);
 
 					// thresholded image at all available levels
-					th1 = new ImgView<BitType>(
-							Converters.convert(
-									(RandomAccessibleInterval<T>) img, c,
-									new BitType()), img.factory().imgFactory(
-									new BitType()));
+					th1 = new ImgView<BitType>(Converters.convert((RandomAccessibleInterval<T>) img, c, new BitType()),
+							img.factory().imgFactory(new BitType()));
 					final Cursor<BitType> th1C = th1.localizingCursor();
-					final Cursor<BitType> th0C = th0 == null ? null : th0
-							.cursor();
+					final Cursor<BitType> th0C = th0 == null ? null : th0.cursor();
 					Cursor<BitType> lcC = levelComps.cursor();
 					while (th1C.hasNext()) {
 						th1C.fwd();
@@ -222,9 +201,7 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 						if (th0C != null) {
 							th0C.fwd();
 						}
-						if (th1C.get().get()
-								&& (th0C == null || !th0C.get().get())
-								&& !lcC.get().get()) {
+						if (th1C.get().get() && (th0C == null || !th0C.get().get()) && !lcC.get().get()) {
 							// if the pixel was newly added at the
 							// current thresholding level -> use position for
 							// flood filling on the current level
@@ -254,19 +231,16 @@ public class UCMRegionsNodeFactory<T extends IntegerType<T>> extends
 						t.set(false);
 					}
 				}
-				if (KNIPGateway.regions().regions(res).getExistingLabels()
-						.size() == 0) {
+				if (KNIPGateway.regions().regions(res).getExistingLabels().size() == 0) {
 					throw new KNIPRuntimeException("Empty labeling!");
 				} else {
-					return m_cellFactory.createCell(res,
-							new DefaultLabelingMetadata(img, img, img, null));
+					return m_cellFactory.createCell(res, new DefaultLabelingMetadata(img, img, img, null));
 				}
 			}
 		};
 	}
 
-	private class ThresholdConverter<T extends RealType<T>> implements
-			Converter<T, BitType> {
+	private class ThresholdConverter<T extends RealType<T>> implements Converter<T, BitType> {
 
 		private double m_threshold;
 

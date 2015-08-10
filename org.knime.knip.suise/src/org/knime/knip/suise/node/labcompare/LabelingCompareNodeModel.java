@@ -88,8 +88,7 @@ import org.knime.knip.core.features.FeatureSet;
  * 
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
-public class LabelingCompareNodeModel<L extends Comparable<L>> extends
-		NodeModel {
+public class LabelingCompareNodeModel<L extends Comparable<L>> extends NodeModel {
 
 	private SettingsModelString m_labelingCol1 = createLabelingCol1Model();
 
@@ -115,15 +114,11 @@ public class LabelingCompareNodeModel<L extends Comparable<L>> extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
-			throws InvalidSettingsException {
-		NodeUtils.autoColumnSelection(inSpecs[0], m_labelingCol1,
-				LabelingValue.class, this.getClass());
-		NodeUtils.autoColumnSelection(inSpecs[0], m_labelingCol2,
-				LabelingValue.class, this.getClass());
+	protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
+		NodeUtils.autoColumnSelection(inSpecs[0], m_labelingCol1, LabelingValue.class, this.getClass());
+		NodeUtils.autoColumnSelection(inSpecs[0], m_labelingCol2, LabelingValue.class, this.getClass());
 		ColumnRearranger rearranger = new ColumnRearranger(inSpecs[0]);
-		rearranger.append(createCellFactory(0, 1, null,
-				new LabelingCompareFeatureSet<L>()));
+		rearranger.append(createCellFactory(0, 1, null, new LabelingCompareFeatureSet<L>()));
 		return new DataTableSpec[] { rearranger.createSpec() };
 
 	}
@@ -132,53 +127,42 @@ public class LabelingCompareNodeModel<L extends Comparable<L>> extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected BufferedDataTable[] execute(BufferedDataTable[] inData,
-			ExecutionContext exec) throws Exception {
+	protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
 
-		int colIdx1 = NodeUtils.autoColumnSelection(
-				inData[0].getDataTableSpec(), m_labelingCol1,
-				LabelingValue.class, this.getClass());
-		int colIdx2 = NodeUtils.autoColumnSelection(
-				inData[0].getDataTableSpec(), m_labelingCol2,
-				LabelingValue.class, this.getClass());
+		int colIdx1 = NodeUtils.autoColumnSelection(inData[0].getDataTableSpec(), m_labelingCol1, LabelingValue.class,
+				this.getClass());
+		int colIdx2 = NodeUtils.autoColumnSelection(inData[0].getDataTableSpec(), m_labelingCol2, LabelingValue.class,
+				this.getClass());
 
-		ColumnRearranger rearranger = new ColumnRearranger(
-				inData[0].getDataTableSpec());
-		rearranger.append(createCellFactory(colIdx1, colIdx2, exec,
-				new LabelingCompareFeatureSet<L>()));
+		ColumnRearranger rearranger = new ColumnRearranger(inData[0].getDataTableSpec());
+		rearranger.append(createCellFactory(colIdx1, colIdx2, exec, new LabelingCompareFeatureSet<L>()));
 
-		return new BufferedDataTable[] { exec.createColumnRearrangeTable(
-				inData[0], rearranger, exec) };
+		return new BufferedDataTable[] { exec.createColumnRearrangeTable(inData[0], rearranger, exec) };
 
 	}
 
-	private CellFactory createCellFactory(final int colIdx1, final int colIdx2,
-			ExecutionContext exec, final FeatureSet... featureSets) {
+	private CellFactory createCellFactory(final int colIdx1, final int colIdx2, ExecutionContext exec,
+			final FeatureSet... featureSets) {
 
 		final FeatureFactory featFac = new FeatureFactory(true, featureSets);
 
-		final ImgPlusCellFactory cellFac = exec != null ? new ImgPlusCellFactory(
-				exec) : null;
+		final ImgPlusCellFactory cellFac = exec != null ? new ImgPlusCellFactory(exec) : null;
 
 		return new CellFactory() {
 
 			@Override
-			public void setProgress(int curRowNr, int rowCount, RowKey lastKey,
-					ExecutionMonitor exec) {
+			public void setProgress(int curRowNr, int rowCount, RowKey lastKey, ExecutionMonitor exec) {
 				exec.setProgress(curRowNr / (double) rowCount);
 
 			}
 
 			@Override
 			public DataColumnSpec[] getColumnSpecs() {
-				DataColumnSpec[] specs = new DataColumnSpec[featFac
-						.getNumFeatures() + 1];
+				DataColumnSpec[] specs = new DataColumnSpec[featFac.getNumFeatures() + 1];
 
-				specs[0] = new DataColumnSpecCreator("Difference Image",
-						ImgPlusCell.TYPE).createSpec();
+				specs[0] = new DataColumnSpecCreator("Difference Image", ImgPlusCell.TYPE).createSpec();
 				for (int i = 1; i < specs.length; i++) {
-					specs[i] = new DataColumnSpecCreator(
-							featFac.getFeatureNames()[i - 1], DoubleCell.TYPE)
+					specs[i] = new DataColumnSpecCreator(featFac.getFeatureNames()[i - 1], DoubleCell.TYPE)
 							.createSpec();
 				}
 
@@ -188,32 +172,26 @@ public class LabelingCompareNodeModel<L extends Comparable<L>> extends
 			@Override
 			public DataCell[] getCells(DataRow row) {
 				if (row.getCell(colIdx1).isMissing()) {
-					throw new RuntimeException(
-							"Reference labeling is missing (missing cell)!");
+					throw new RuntimeException("Reference labeling is missing (missing cell)!");
 				}
 
 				RandomAccessibleInterval<LabelingType<L>>[] labs = new RandomAccessibleInterval[2];
-				labs[0] = ((LabelingValue<L>) row.getCell(colIdx1))
-						.getLabeling();
+				labs[0] = ((LabelingValue<L>) row.getCell(colIdx1)).getLabeling();
 				if (row.getCell(colIdx2).isMissing()) {
 					// create empty labeling
 					setWarningMessage("Missing target labeling (missing cell). Empty labeling assumed.");
-					labs[1] = (RandomAccessibleInterval<LabelingType<L>>) KNIPGateway
-							.ops().create(labs[0]);
+					labs[1] = KNIPGateway.ops().create().imgLabeling(labs[0]);
 				} else {
-					labs[1] = ((LabelingValue<L>) row.getCell(colIdx2))
-							.getLabeling();
+					labs[1] = ((LabelingValue<L>) row.getCell(colIdx2)).getLabeling();
 				}
 				featFac.updateFeatureTarget(labs);
 
 				DataCell[] cells = new DataCell[featFac.getNumFeatures() + 1];
 				for (FeatureSet fset : featureSets) {
 					if (fset instanceof LabelingCompareFeatureSet) {
-						Img<ByteType> img = ((LabelingCompareFeatureSet) fset)
-								.getDiffImg();
+						Img<ByteType> img = ((LabelingCompareFeatureSet) fset).getDiffImg();
 						try {
-							cells[0] = cellFac
-									.createCell(new ImgPlus<ByteType>(img));
+							cells[0] = cellFac.createCell(new ImgPlus<ByteType>(img));
 						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}
@@ -270,8 +248,7 @@ public class LabelingCompareNodeModel<L extends Comparable<L>> extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void validateSettings(NodeSettingsRO settings)
-			throws InvalidSettingsException {
+	protected void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		m_labelingCol1.validateSettings(settings);
 		m_labelingCol1.validateSettings(settings);
 
@@ -281,8 +258,7 @@ public class LabelingCompareNodeModel<L extends Comparable<L>> extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
-			throws InvalidSettingsException {
+	protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
 		m_labelingCol1.loadSettingsFrom(settings);
 		m_labelingCol2.loadSettingsFrom(settings);
 

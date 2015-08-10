@@ -88,8 +88,8 @@ import org.knime.knip.suise.data.feat.PixFeatureSet;
  * 
  * @author <a href="mailto:horn_martin@gmx.de">Martin Horn</a>
  */
-public class PixFeaturesNodeModel<T extends RealType<T>> extends
-		ValueToCellNodeModel<ImgPlusValue<T>, ImgPlusCell<UnsignedByteType>> {
+public class PixFeaturesNodeModel<T extends RealType<T>>
+		extends ValueToCellNodeModel<ImgPlusValue<T>, ImgPlusCell<UnsignedByteType>> {
 
 	public static final String DEFAULT_FEATURE_DIM_LABEL = "F";
 
@@ -99,20 +99,16 @@ public class PixFeaturesNodeModel<T extends RealType<T>> extends
 		return new SettingsModelStringArray("active featureSets", new String[0]);
 	}
 
-	final static SettingsModelIntegerBounded createNumOrientationsModel(
-			int maxNumOrientations) {
-		return new SettingsModelIntegerBounded("max_num_orientations",
-				maxNumOrientations, 1, maxNumOrientations);
+	final static SettingsModelIntegerBounded createNumOrientationsModel(int maxNumOrientations) {
+		return new SettingsModelIntegerBounded("max_num_orientations", maxNumOrientations, 1, maxNumOrientations);
 	}
 
 	final static SettingsModelString createOrientationDimLabelModel() {
-		return new SettingsModelString("orientation_dim_label",
-				DEFAULT_ORIENTATION_DIM_LABEL);
+		return new SettingsModelString("orientation_dim_label", DEFAULT_ORIENTATION_DIM_LABEL);
 	}
 
 	final static SettingsModelString createFeatureDimLabelModel() {
-		return new SettingsModelString("feature_dim_label",
-				DEFAULT_FEATURE_DIM_LABEL);
+		return new SettingsModelString("feature_dim_label", DEFAULT_FEATURE_DIM_LABEL);
 	}
 
 	private SettingsModelStringArray m_activeFeatureSets = createActiveFeatureSetModel();
@@ -131,8 +127,7 @@ public class PixFeaturesNodeModel<T extends RealType<T>> extends
 
 	private ImgPlusCellFactory m_imgCellFactory;
 
-	public PixFeaturesNodeModel(PixFeatureSetProvider[] pixFeatProviders,
-			int pixFeatDim, int maxNumOrientations) {
+	public PixFeaturesNodeModel(PixFeatureSetProvider[] pixFeatProviders, int pixFeatDim, int maxNumOrientations) {
 		super();
 		m_pixFeatProviders = pixFeatProviders;
 		m_pixFeatDimensionality = pixFeatDim;
@@ -166,14 +161,11 @@ public class PixFeaturesNodeModel<T extends RealType<T>> extends
 	@Override
 	protected void prepareExecute(ExecutionContext exec) {
 		// create feature factory
-		Set<String> active = new HashSet<String>(
-				Arrays.asList(m_activeFeatureSets.getStringArrayValue()));
-		List<PixFeatureSet<T>> featSets = new ArrayList<PixFeatureSet<T>>(
-				m_pixFeatProviders.length);
+		Set<String> active = new HashSet<String>(Arrays.asList(m_activeFeatureSets.getStringArrayValue()));
+		List<PixFeatureSet<T>> featSets = new ArrayList<PixFeatureSet<T>>(m_pixFeatProviders.length);
 		for (PixFeatureSetProvider<T> p : m_pixFeatProviders) {
 			if (active.contains(p.getFeatureSetId())) {
-				featSets.add(p.getPixFeatureSet(m_smNumOrientations
-						.getIntValue()));
+				featSets.add(p.getPixFeatureSet(m_smNumOrientations.getIntValue()));
 			}
 		}
 
@@ -186,49 +178,38 @@ public class PixFeaturesNodeModel<T extends RealType<T>> extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected ImgPlusCell<UnsignedByteType> compute(ImgPlusValue<T> cellValue)
-			throws Exception {
+	protected ImgPlusCell<UnsignedByteType> compute(ImgPlusValue<T> cellValue) throws Exception {
 
-		ImgPlus<FloatType> featImg = new ImgPlus(m_featFac.makeFeatureImage(
-				cellValue.getImgPlus(), m_pixFeatDimensionality,
-				m_smNumOrientations.getIntValue()));
+		ImgPlus<FloatType> featImg = new ImgPlus(m_featFac.makeFeatureImage(cellValue.getImgPlus(),
+				m_pixFeatDimensionality, m_smNumOrientations.getIntValue()));
 
 		// normalize image interval plane-wise
-		SubsetOperations.iterate(new ImgPlusNormalize<FloatType>(0,
-				new FloatType(), null, false), new int[] { 0, 1 }, featImg,
-				featImg);
+		SubsetOperations.iterate(new ImgPlusNormalize<FloatType>(0, new FloatType(), null, false), new int[] { 0, 1 },
+				featImg, featImg);
 
-		Img<UnsignedByteType> res = (Img<UnsignedByteType>) KNIPGateway.ops()
-				.createImg(featImg, new UnsignedByteType());
-		ImgConvert<FloatType, UnsignedByteType> convert = new ImgConvert<FloatType, UnsignedByteType>(
-				new FloatType(), new UnsignedByteType(),
-				ImgConversionTypes.SCALE, res.factory());
+		Img<UnsignedByteType> res = (Img<UnsignedByteType>) KNIPGateway.ops().create().img(featImg,
+				new UnsignedByteType());
+		ImgConvert<FloatType, UnsignedByteType> convert = new ImgConvert<FloatType, UnsignedByteType>(new FloatType(),
+				new UnsignedByteType(), ImgConversionTypes.SCALE, res.factory());
 		convert.compute((RandomAccessibleInterval<FloatType>) featImg, res);
 		ImgPlusMetadata metadata = cellValue.getMetadata();
 		if (m_smNumOrientations.getIntValue() > 1) {
-			List<CalibratedAxis> axes = new ArrayList<CalibratedAxis>(
-					metadata.numDimensions() + 1);
+			List<CalibratedAxis> axes = new ArrayList<CalibratedAxis>(metadata.numDimensions() + 1);
 			for (int i = 0; i < metadata.numDimensions(); i++) {
 				axes.add(metadata.axis(i));
 			}
-			axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel
-					.getStringValue())));
-			axes.add(new DefaultLinearAxis(Axes.get(m_smOrientationDimLabel
-					.getStringValue())));
-			return m_imgCellFactory.createCell(res, new DefaultImgMetadata(
-					new DefaultCalibratedSpace(axes), metadata, metadata,
-					metadata));
+			axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel.getStringValue())));
+			axes.add(new DefaultLinearAxis(Axes.get(m_smOrientationDimLabel.getStringValue())));
+			return m_imgCellFactory.createCell(new ImgPlus(res,
+					new DefaultImgMetadata(new DefaultCalibratedSpace(axes), metadata, metadata, metadata)));
 		} else {
-			List<CalibratedAxis> axes = new ArrayList<CalibratedAxis>(
-					metadata.numDimensions() + 1);
+			List<CalibratedAxis> axes = new ArrayList<CalibratedAxis>(metadata.numDimensions() + 1);
 			for (int i = 0; i < metadata.numDimensions(); i++) {
 				axes.add(metadata.axis(i));
 			}
-			axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel
-					.getStringValue())));
-			return m_imgCellFactory.createCell(res, new DefaultImgMetadata(
-					new DefaultCalibratedSpace(axes), metadata, metadata,
-					metadata));
+			axes.add(new DefaultLinearAxis(Axes.get(m_smFeatDimLabel.getStringValue())));
+			return m_imgCellFactory.createCell(new ImgPlus<>(res,
+					new DefaultImgMetadata(new DefaultCalibratedSpace(axes), metadata, metadata, metadata)));
 		}
 	}
 }

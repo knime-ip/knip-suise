@@ -96,8 +96,7 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 
 	private final RT m_resType;
 
-	public ClassifyPixels(Classifier classifier, Instances dataset,
-			int numClasses, int[] dimIndices, int featDimIdx,
+	public ClassifyPixels(Classifier classifier, Instances dataset, int numClasses, int[] dimIndices, int featDimIdx,
 			boolean createLabeling, RT resType) {
 		m_classifier = classifier;
 		m_dataset = dataset;
@@ -122,8 +121,7 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 				dims[j] = op.dimension(j);
 			}
 
-			m_labeling = (RandomAccessibleInterval<LabelingType<String>>) KNIPGateway
-					.ops().createImgLabeling(dims);
+			m_labeling = (RandomAccessibleInterval<LabelingType<String>>) KNIPGateway.ops().create().imgLabeling(dims);
 			labelingRA = m_labeling.randomAccess();
 		}
 
@@ -132,8 +130,7 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 			max[d] = op.max(m_dimIndices[d]);
 		}
 
-		IntervalIterator ii = new IntervalIterator(
-				new long[m_dimIndices.length], max);
+		IntervalIterator ii = new IntervalIterator(new long[m_dimIndices.length], max);
 
 		RandomAccess<RT>[] resRAs = new RandomAccess[r.length];
 		for (int i = 0; i < resRAs.length; i++) {
@@ -163,9 +160,7 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 					for (int d = 0; d < m_dimIndices.length; d++) {
 						labelingRA.setPosition(ii.getLongPosition(d), d);
 						labelingRA.get().clear();
-						labelingRA.get().add(
-								m_dataset.classAttribute().value(
-										Utils.maxIndex(probs)));
+						labelingRA.get().add(m_dataset.classAttribute().value(Utils.maxIndex(probs)));
 					}
 				}
 
@@ -176,11 +171,8 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 				if (probs[i] > 0) {
 					for (int d = 0; d < m_dimIndices.length; d++) {
 						resRAs[i].setPosition(ii.getLongPosition(d), d);
-						resRAs[i].get().setReal(
-								probs[i]
-										* (m_resType.getMaxValue() - m_resType
-												.getMinValue())
-										+ m_resType.getMinValue());
+						resRAs[i].get().setReal(probs[i] * (m_resType.getMaxValue() - m_resType.getMinValue())
+								+ m_resType.getMinValue());
 					}
 				}
 			}
@@ -200,8 +192,8 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 	 */
 	@Override
 	public UnaryOutputOperation<Img<T>, Img<RT>[]> copy() {
-		return new ClassifyPixels<T, RT>(m_classifier, m_dataset, m_numClasses,
-				m_dimIndices, m_featDimIdx, m_createLabeling, m_resType);
+		return new ClassifyPixels<T, RT>(m_classifier, m_dataset, m_numClasses, m_dimIndices, m_featDimIdx,
+				m_createLabeling, m_resType);
 	}
 
 	/**
@@ -221,8 +213,7 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 						for (int j = 0; j < dims.length; j++) {
 							dims[j] = a.dimension(j);
 						}
-						res[i] = a.factory().imgFactory(m_resType)
-								.create(dims, m_resType);
+						res[i] = a.factory().imgFactory(m_resType).create(dims, m_resType);
 
 						set.compute(res[i], res[i]);
 					} catch (IncompatibleTypeException e) {

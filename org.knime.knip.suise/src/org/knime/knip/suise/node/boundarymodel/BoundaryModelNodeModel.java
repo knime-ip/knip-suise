@@ -121,11 +121,9 @@ import weka.classifiers.trees.RandomForest;
  * @author hornm, University of Konstanz
  */
 public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>, L extends Comparable<L>>
-		extends
-		TwoValuesToCellNodeModel<ImgPlusValue<F>, LabelingValue<L>, ListCell> {
+		extends TwoValuesToCellNodeModel<ImgPlusValue<F>, LabelingValue<L>, ListCell> {
 
-	private static final NodeLogger LOGGER = NodeLogger
-			.getLogger(BoundaryModelNodeModel.class);
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(BoundaryModelNodeModel.class);
 
 	private static final int DIM_X = 0;
 
@@ -145,29 +143,24 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 
 	static SettingsModelString createSelectionStrategyModel() {
 		return new SettingsModelString("selection_strategy",
-				BoundaryModel.SelectionStrategy.ITERATIVE_INFERENCE_SELECTION
-						.name());
+				BoundaryModel.SelectionStrategy.ITERATIVE_INFERENCE_SELECTION.name());
 	}
 
 	static SettingsModelWekaClassifier createClassifierModel() {
-		return new SettingsModelWekaClassifier("weka_classifier",
-				new RandomForest());
+		return new SettingsModelWekaClassifier("weka_classifier", new RandomForest());
 	}
 
 	static SettingsModelString createOptionalParametersModel() {
 		return new SettingsModelString("optional_parameters",
-				BoundaryModel.OPTIONAL_PARAMETER_STDEV + "=200,"
-						+ BoundaryModel.OPTIONAL_PARAMETER_BIAS + "=100");
+				BoundaryModel.OPTIONAL_PARAMETER_STDEV + "=200," + BoundaryModel.OPTIONAL_PARAMETER_BIAS + "=100");
 	}
 
 	final static SettingsModelString createOrientationDimLabelModel() {
-		return new SettingsModelString("orientation_dim_label",
-				PixFeaturesNodeModel.DEFAULT_ORIENTATION_DIM_LABEL);
+		return new SettingsModelString("orientation_dim_label", PixFeaturesNodeModel.DEFAULT_ORIENTATION_DIM_LABEL);
 	}
 
 	final static SettingsModelString createFeatureDimLabelModel() {
-		return new SettingsModelString("feature_dim_label",
-				PixFeaturesNodeModel.DEFAULT_FEATURE_DIM_LABEL);
+		return new SettingsModelString("feature_dim_label", PixFeaturesNodeModel.DEFAULT_FEATURE_DIM_LABEL);
 	}
 
 	private SettingsModelString m_srcImgCol = createSrcImgColModel();
@@ -213,15 +206,14 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		if (inSpecs[1] == null) {
 			return super.configure(inSpecs);
 		} else {
 			getApplyImgColIndex((DataTableSpec) inSpecs[1]);
 			return new PortObjectSpec[] { new DataTableSpec(
-					new DataColumnSpecCreator("Prob. Map", ListCell
-							.getCollectionType(ImgPlusCell.TYPE)).createSpec()) };
+					new DataColumnSpecCreator("Prob. Map", ListCell.getCollectionType(ImgPlusCell.TYPE))
+							.createSpec()) };
 		}
 	}
 
@@ -229,8 +221,7 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
-			throws Exception {
+	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 		exec.setProgress("Build boundary model ...");
 
 		BufferedDataTable inTable0 = (BufferedDataTable) inObjects[0];
@@ -245,8 +236,8 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 		m_boundaryModel = new BoundaryModel<T, F>();
 
 		// set selection strategy
-		m_boundaryModel.setSelectionStrategy(BoundaryModel.SelectionStrategy
-				.valueOf(m_selectionStrategy.getStringValue()));
+		m_boundaryModel
+				.setSelectionStrategy(BoundaryModel.SelectionStrategy.valueOf(m_selectionStrategy.getStringValue()));
 
 		// set classifier
 		m_boundaryModel.setWekaClassifier(m_classifier.getClassifier());
@@ -265,33 +256,26 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 		while (rowIterator.hasNext()) {
 			DataRow row = rowIterator.next();
 
-			if (row.getCell(firstColIdx).isMissing()
-					|| row.getCell(secondColidx).isMissing()) {
-				LOGGER.warn("Missing cells in row " + row.getKey()
-						+ ". Row has been skipped.");
+			if (row.getCell(firstColIdx).isMissing() || row.getCell(secondColidx).isMissing()) {
+				LOGGER.warn("Missing cells in row " + row.getKey() + ". Row has been skipped.");
 				continue;
 			}
 
 			// the feature image
 			@SuppressWarnings("unchecked")
-			ImgPlus<F> img = ((ImgPlusValue<F>) row.getCell(firstColIdx))
-					.getImgPlus();
+			ImgPlus<F> img = ((ImgPlusValue<F>) row.getCell(firstColIdx)).getImgPlus();
 			Img<T> srcImg = null;
 			if (srcImgColIndex > -1) {
-				srcImg = ((ImgPlusValue<T>) row.getCell(srcImgColIndex))
-						.getImgPlus();
+				srcImg = ((ImgPlusValue<T>) row.getCell(srcImgColIndex)).getImgPlus();
 				if (srcImg.numDimensions() != 2) {
-					LOGGER.warn("The source image for debugging in row "
-							+ row.getKey()
+					LOGGER.warn("The source image for debugging in row " + row.getKey()
 							+ " has been skipped as its not 2-dimensional!");
 					srcImg = null;
 				}
 			}
 
-			int dimFeat = img.dimensionIndex(Axes.get(m_featureDimLabel
-					.getStringValue()));
-			int dimAngle = img.dimensionIndex(Axes.get(m_orientationDimLabel
-					.getStringValue()));
+			int dimFeat = img.dimensionIndex(Axes.get(m_featureDimLabel.getStringValue()));
+			int dimAngle = img.dimensionIndex(Axes.get(m_orientationDimLabel.getStringValue()));
 			if (dimFeat == -1 || dimAngle == -1) {
 				throw new KNIPException(
 						"At least one of the dimension label (orientation/feature) is not present in the image "
@@ -299,19 +283,16 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 			}
 
 			BufferedPixelFeatureSet<F> featSet = new BufferedPixelFeatureSet<F>(
-					new String[(int) img.dimension(dimFeat)], DIM_X, DIM_Y,
-					dimFeat, dimAngle);
+					new String[(int) img.dimension(dimFeat)], DIM_X, DIM_Y, dimFeat, dimAngle);
 			m_boundaryModel.setFeatureSet(featSet);
 
-			LabelingValue<L> labVal = (LabelingValue<L>) row
-					.getCell(secondColidx);
+			LabelingValue<L> labVal = (LabelingValue<L>) row.getCell(secondColidx);
 
 			featSet.updateImg(img);
 
 			// generate polygons and add them to the boundary model
 			for (Polygon p : getPolygons(labVal.getLabeling())) {
-				m_boundaryModel.addSamples(p, (int) img.dimension(0),
-						(int) img.dimension(1), srcImg);
+				m_boundaryModel.addSamples(p, (int) img.dimension(0), (int) img.dimension(1), srcImg);
 			}
 
 		}
@@ -329,25 +310,20 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 		} else {
 			// else classify the so far unseen images from the optional inport
 			BufferedDataTable inTable1 = (BufferedDataTable) inObjects[1];
-			BufferedDataContainer dataCon = exec
-					.createDataContainer(new DataTableSpec(
-							new DataColumnSpecCreator("Prob. Map", ListCell
-									.getCollectionType(ImgPlusCell.TYPE))
-									.createSpec()));
+			BufferedDataContainer dataCon = exec.createDataContainer(new DataTableSpec(
+					new DataColumnSpecCreator("Prob. Map", ListCell.getCollectionType(ImgPlusCell.TYPE)).createSpec()));
 			RowIterator rowIt = inTable1.iterator();
 			int colidx = getApplyImgColIndex(inTable1.getDataTableSpec());
-			int maskImgColIndex = getMaskImgColIndex(inTable1
-					.getDataTableSpec());
+			int maskImgColIndex = getMaskImgColIndex(inTable1.getDataTableSpec());
 			Img<BitType> mask = null;
 			int rowCount = 0;
 			while (rowIt.hasNext()) {
 				DataRow row = rowIt.next();
 				if (maskImgColIndex != -1) {
-					mask = ((ImgPlusValue<BitType>) row
-							.getCell(maskImgColIndex)).getImgPlus();
+					mask = ((ImgPlusValue<BitType>) row.getCell(maskImgColIndex)).getImgPlus();
 				}
-				DefaultRow res = new DefaultRow(row.getKey(), computeResult(
-						(ImgPlusValue<F>) row.getCell(colidx), mask));
+				DefaultRow res = new DefaultRow(row.getKey(),
+						computeResult((ImgPlusValue<F>) row.getCell(colidx), mask));
 				dataCon.addRowToTable(res);
 				exec.checkCanceled();
 				exec.setProgress((double) rowCount++ / inTable1.getRowCount());
@@ -358,44 +334,36 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 		}
 	}
 
-	private int getSrcImgColIndex(DataTableSpec inSpec)
-			throws InvalidSettingsException {
+	private int getSrcImgColIndex(DataTableSpec inSpec) throws InvalidSettingsException {
 		int colIdx = -1;
 		if (m_srcImgCol.getStringValue() != null) {
-			colIdx = NodeUtils.autoColumnSelection(inSpec, m_srcImgCol,
-					ImgPlusValue.class, this.getClass());
+			colIdx = NodeUtils.autoColumnSelection(inSpec, m_srcImgCol, ImgPlusValue.class, this.getClass());
 		}
 		return colIdx;
 	}
 
-	private int getApplyImgColIndex(DataTableSpec inSpec)
-			throws InvalidSettingsException {
+	private int getApplyImgColIndex(DataTableSpec inSpec) throws InvalidSettingsException {
 		int colIdx = -1;
 		if (m_applyImgCol.getStringValue() != null) {
-			colIdx = NodeUtils.autoColumnSelection(inSpec, m_applyImgCol,
-					ImgPlusValue.class, this.getClass());
+			colIdx = NodeUtils.autoColumnSelection(inSpec, m_applyImgCol, ImgPlusValue.class, this.getClass());
 		}
 		return colIdx;
 	}
 
-	private int getMaskImgColIndex(DataTableSpec inSpec)
-			throws InvalidSettingsException {
+	private int getMaskImgColIndex(DataTableSpec inSpec) throws InvalidSettingsException {
 		int colIdx = -1;
 		if (m_maskImgCol.getStringValue() != null) {
-			colIdx = NodeUtils.autoColumnSelection(inSpec, m_maskImgCol,
-					ImgPlusValue.class, this.getClass());
+			colIdx = NodeUtils.autoColumnSelection(inSpec, m_maskImgCol, ImgPlusValue.class, this.getClass());
 		}
 		return colIdx;
 	}
 
 	/* Creates a list of polygons from a labeling */
-	private Collection<Polygon> getPolygons(
-			RandomAccessibleInterval<LabelingType<L>> randomAccessibleInterval) {
+	private Collection<Polygon> getPolygons(RandomAccessibleInterval<LabelingType<L>> randomAccessibleInterval) {
 		int[] offset = new int[2];
 		long[] tmp = new long[2];
 		ArrayList<Polygon> polygons = new ArrayList<Polygon>();
-		final LabelRegions<L> regions = KNIPGateway.regions().regions(
-				randomAccessibleInterval);
+		final LabelRegions<L> regions = KNIPGateway.regions().regions(randomAccessibleInterval);
 		for (final L label : regions.getExistingLabels()) {
 			LabelRegion<L> region = regions.getLabelRegion(label);
 			Img<BitType> mask = binaryMask(region);
@@ -410,8 +378,7 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 
 	/* Creates the binary mask from an iterable interval */
 	private Img<BitType> binaryMask(IterableInterval<BoolType> ii) {
-		Img<BitType> binaryMask = new ArrayImgFactory<BitType>().create(ii,
-				new BitType());
+		Img<BitType> binaryMask = new ArrayImgFactory<BitType>().create(ii, new BitType());
 		RandomAccess<BitType> maskRA = binaryMask.randomAccess();
 
 		Cursor<BoolType> cur = ii.localizingCursor();
@@ -439,8 +406,7 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected ListCell compute(ImgPlusValue<F> cellValue1,
-			LabelingValue<L> cellValue2) throws Exception {
+	protected ListCell compute(ImgPlusValue<F> cellValue1, LabelingValue<L> cellValue2) throws Exception {
 		/*
 		 * Apply the boundary classifier to the source images and/or the cell
 		 * samples, if desired
@@ -449,51 +415,40 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 
 	}
 
-	private ListCell computeResult(ImgPlusValue<F> val, Img<BitType> mask)
-			throws Exception {
+	private ListCell computeResult(ImgPlusValue<F> val, Img<BitType> mask) throws Exception {
 		// the source feature image
 		ImgPlus<F> img = val.getImgPlus();
-		int dimFeat = img.dimensionIndex(Axes.get(m_featureDimLabel
-				.getStringValue()));
-		int dimAngle = img.dimensionIndex(Axes.get(m_orientationDimLabel
-				.getStringValue()));
+		int dimFeat = img.dimensionIndex(Axes.get(m_featureDimLabel.getStringValue()));
+		int dimAngle = img.dimensionIndex(Axes.get(m_orientationDimLabel.getStringValue()));
 		if (dimFeat == -1 || dimAngle == -1) {
-			throw new KNIPException(
-					"One of the dimension labels (orientation/feature) are not present in the image "
-							+ img.getName() + ".");
+			throw new KNIPException("One of the dimension labels (orientation/feature) are not present in the image "
+					+ img.getName() + ".");
 		}
-		BufferedPixelFeatureSet<F> featSet = new BufferedPixelFeatureSet<F>(
-				new String[(int) img.dimension(dimFeat)], DIM_X, DIM_Y,
-				dimFeat, dimAngle);
+		BufferedPixelFeatureSet<F> featSet = new BufferedPixelFeatureSet<F>(new String[(int) img.dimension(dimFeat)],
+				DIM_X, DIM_Y, dimFeat, dimAngle);
 		featSet.updateImg(img);
 		m_boundaryModel.setFeatureSet(featSet);
 
 		if (mask == null) {
 			mask =
 
-			new ImgView<BitType>(
-					ConstantUtils.constantRandomAccessibleInterval(new BitType(
-							true), 2,
-							new FinalInterval(new long[] { img.dimension(0),
-									img.dimension(1) })), null);
+			new ImgView<BitType>(ConstantUtils.constantRandomAccessibleInterval(new BitType(true), 2,
+					new FinalInterval(new long[] { img.dimension(0), img.dimension(1) })), null);
 		}
-		Img<ByteType>[] classResultImg = m_boundaryModel
-				.classifyImageContourModelwise(new int[2], mask);
+		Img<ByteType>[] classResultImg = m_boundaryModel.classifyImageContourModelwise(new int[2], mask);
 
 		// create cells
-		ArrayList<ImgPlusCell> cells = new ArrayList<ImgPlusCell>(
-				classResultImg.length);
+		ArrayList<ImgPlusCell> cells = new ArrayList<ImgPlusCell>(classResultImg.length);
 		for (int i = 0; i < classResultImg.length; i++) {
 			ImgPlusCell<ByteType> cell = m_imgCellFactory
 					.createCell(
-							classResultImg[i],
-							new DefaultImgMetadata(new DefaultCalibratedSpace(
-									new DefaultLinearAxis(Axes.X),
-									new DefaultLinearAxis(Axes.Y),
-									new DefaultLinearAxis(Axes
-											.get(m_orientationDimLabel
-													.getStringValue()))), img,
-									img, img));
+							new ImgPlus<>(classResultImg[i],
+									new DefaultImgMetadata(
+											new DefaultCalibratedSpace(new DefaultLinearAxis(Axes.X),
+													new DefaultLinearAxis(Axes.Y),
+													new DefaultLinearAxis(
+															Axes.get(m_orientationDimLabel.getStringValue()))),
+											img, img, img)));
 			cells.add(cell);
 		}
 
