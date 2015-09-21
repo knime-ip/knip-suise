@@ -377,11 +377,11 @@ public class BoundaryModelNodeModel<F extends RealType<F>, T extends RealType<T>
 	}
 
 	/* Creates the binary mask from an iterable interval */
-	private Img<BitType> binaryMask(IterableInterval<BoolType> ii) {
+	private Img<BitType> binaryMask(IterableInterval<Void> ii) {
 		Img<BitType> binaryMask = new ArrayImgFactory<BitType>().create(ii, new BitType());
 		RandomAccess<BitType> maskRA = binaryMask.randomAccess();
 
-		Cursor<BoolType> cur = ii.localizingCursor();
+		Cursor<Void> cur = ii.localizingCursor();
 		while (cur.hasNext()) {
 			cur.fwd();
 			for (int d = 0; d < cur.numDimensions(); d++) {
