@@ -57,11 +57,9 @@ import java.util.Set;
 
 import net.imagej.ImgPlus;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.labeling.Labeling;
 import net.imglib2.roi.labeling.LabelRegions;
 import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.util.Util;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;

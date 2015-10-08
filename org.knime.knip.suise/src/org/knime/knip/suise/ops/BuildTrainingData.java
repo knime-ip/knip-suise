@@ -64,7 +64,6 @@ import net.imglib2.ops.operation.BinaryOutputOperation;
 import net.imglib2.outofbounds.OutOfBounds;
 import net.imglib2.outofbounds.OutOfBoundsBorder;
 import net.imglib2.roi.RectangleRegionOfInterest;
-import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegions;
 import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;

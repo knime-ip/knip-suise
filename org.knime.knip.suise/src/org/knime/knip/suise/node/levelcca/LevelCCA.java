@@ -57,7 +57,6 @@ import net.imglib2.histogram.Histogram1d;
 import net.imglib2.histogram.Integer1dBinMapper;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
-import net.imglib2.labeling.Labeling;
 import net.imglib2.ops.operation.UnaryOperation;
 import net.imglib2.ops.operation.iterableinterval.unary.MakeHistogram;
 import net.imglib2.ops.operation.randomaccessibleinterval.unary.regiongrowing.CCA;

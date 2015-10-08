@@ -52,15 +52,11 @@ import java.util.List;
 
 import net.imagej.ImgPlus;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.labeling.Labeling;
-import net.imglib2.labeling.NativeImgLabeling;
 import net.imglib2.ops.operation.randomaccessibleinterval.unary.regiongrowing.AbstractRegionGrowing;
 import net.imglib2.ops.types.ConnectedType;
 import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
-import net.imglib2.type.numeric.integer.IntType;
 
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
