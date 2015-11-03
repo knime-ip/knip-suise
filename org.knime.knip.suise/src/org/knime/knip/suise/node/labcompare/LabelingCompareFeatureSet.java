@@ -150,4 +150,9 @@ public class LabelingCompareFeatureSet<L extends Comparable<L>> implements
         return m_labelingComparison.getDiffImg();
     }
 
+	@Override
+	public void cleanUp() {
+		m_labelingComparison = null;
+	}
+
 }

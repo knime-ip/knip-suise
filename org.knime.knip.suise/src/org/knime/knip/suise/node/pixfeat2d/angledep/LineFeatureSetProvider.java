@@ -115,4 +115,9 @@ public class LineFeatureSetProvider<T extends RealType<T>, F extends RealType<F>
         return "Line feature set";
     }
 
+	@Override
+	public void cleanUp() {
+		// 
+	}
+
 }

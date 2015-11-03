@@ -173,4 +173,9 @@ public class GaborPixFeatureSetProvider<T extends RealType<T>> extends
 
     }
 
+	@Override
+	public void cleanUp() {
+		// empty
+	}
+
 }
