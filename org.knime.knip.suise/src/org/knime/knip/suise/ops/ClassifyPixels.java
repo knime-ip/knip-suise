@@ -48,6 +48,9 @@
  */
 package org.knime.knip.suise.ops;
 
+import org.knime.knip.core.KNIPGateway;
+
+import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.exception.IncompatibleTypeException;
@@ -59,9 +62,6 @@ import net.imglib2.ops.operation.UnaryOutputOperation;
 import net.imglib2.ops.operation.real.unary.RealConstant;
 import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.RealType;
-
-import org.knime.knip.core.KNIPGateway;
-
 /**
  * TODO Auto-generated 
  * 
@@ -121,7 +121,7 @@ public class ClassifyPixels<T extends RealType<T>, RT extends RealType<RT>>
 				dims[j] = op.dimension(j);
 			}
 
-			m_labeling = (RandomAccessibleInterval<LabelingType<String>>) KNIPGateway.ops().create().imgLabeling(dims);
+			m_labeling = KNIPGateway.ops().create().imgLabeling(new FinalInterval(dims));
 			labelingRA = m_labeling.randomAccess();
 		}
 

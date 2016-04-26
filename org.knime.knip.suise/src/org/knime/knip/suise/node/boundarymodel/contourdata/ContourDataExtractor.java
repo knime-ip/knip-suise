@@ -55,6 +55,7 @@ import java.util.List;
 import org.knime.knip.core.KNIPGateway;
 
 import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
@@ -206,8 +207,8 @@ public abstract class ContourDataExtractor extends AbstractVectorDataList {
 	public RandomAccessibleInterval<LabelingType<Integer>> clusterDistrLabeling(Integer bgCluster) {
 		// read labeling mapping and create labeling
 		long[] dims = new long[] { m_cDataGrid.width(), numVectors() };
-		RandomAccessibleInterval<LabelingType<Integer>> res = (RandomAccessibleInterval<LabelingType<Integer>>) KNIPGateway
-				.ops().create().imgLabeling(dims);
+		RandomAccessibleInterval<LabelingType<Integer>> res = KNIPGateway.ops().create()
+				.imgLabeling(new FinalInterval(dims));
 
 		RandomAccess<LabelingType<Integer>> ra = res.randomAccess();
 		for (int h = 0; h < res.dimension(1); h++) {
