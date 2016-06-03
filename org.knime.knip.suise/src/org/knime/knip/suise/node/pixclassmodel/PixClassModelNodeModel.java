@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import net.imagej.ImgPlus;
 import net.imglib2.RandomAccessibleInterval;
@@ -186,7 +187,7 @@ public class PixClassModelNodeModel<T extends RealType<T>, L extends Comparable<
 		// retrieve all available labels
 		RowIterator it = inTable.iterator();
 		DataRow row;
-		Set<L> labels = new HashSet<L>();
+		Set<String> labels = new HashSet<String>();
 		Instances trainingSet = null;
 		int rowCount = inTable.getRowCount();
 		int i = 0;
@@ -204,9 +205,10 @@ public class PixClassModelNodeModel<T extends RealType<T>, L extends Comparable<
 			ImgPlus<T> img = ((ImgPlusValue<T>) row.getCell(imgColIdx))
 					.getImgPlus();
 
-			// collect available labels
-			LabelRegions<L> regions = KNIPGateway.regions().regions(lab);
-			labels.addAll(regions.getExistingLabels());
+            // collect available labels
+            LabelRegions<L> regions = KNIPGateway.regions().regions(lab);
+            labels.addAll(regions.getExistingLabels().stream()
+                    .map(l -> l.toString()).collect(Collectors.toList()));
 
 			int[] tmp = m_featDimSelection.getSelectedDimIndices(
 					img.numDimensions(), img);
