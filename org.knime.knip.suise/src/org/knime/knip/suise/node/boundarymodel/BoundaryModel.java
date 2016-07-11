@@ -63,25 +63,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.ops.img.UnaryConstantRightAssignment;
-import net.imglib2.ops.operation.real.binary.RealCopyLeft;
-import net.imglib2.outofbounds.OutOfBoundsConstantValueFactory;
-import net.imglib2.roi.IterableRegionOfInterest;
-import net.imglib2.roi.labeling.LabelingType;
-import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.ByteType;
-import net.imglib2.util.ConstantUtils;
-import net.imglib2.util.Util;
-import net.imglib2.view.Views;
-
 import org.knime.knip.core.awt.ColorLabelingRenderer;
 import org.knime.knip.core.awt.Real2GreyRenderer;
 import org.knime.knip.core.awt.labelingcolortable.DefaultLabelingColorTable;
@@ -105,6 +86,24 @@ import org.knime.knip.suise.node.boundarymodel.contourdata.WekaContourDataClassi
 import org.knime.knip.suise.node.boundarymodel.contourdata.WekaMIContourDataClassifier;
 import org.knime.knip.suise.node.pixfeat2d.angledep.BufferedPixelFeatureSet;
 
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.ops.img.UnaryConstantRightAssignment;
+import net.imglib2.ops.operation.real.binary.RealCopyLeft;
+import net.imglib2.outofbounds.OutOfBoundsConstantValueFactory;
+import net.imglib2.roi.IterableRegionOfInterest;
+import net.imglib2.roi.labeling.LabelingType;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.util.ConstantUtils;
+import net.imglib2.util.Util;
+import net.imglib2.view.Views;
 /**
  * TODO Auto-generated 
  * 
@@ -122,8 +121,7 @@ import weka.core.matrix.Matrix;
  * 
  * @author hornm, University of Konstanz
  */
-public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
-		implements Externalizable {
+public class BoundaryModel<T extends RealType<T>, F extends RealType<F>> implements Externalizable {
 
 	/**
 	 * Standard deviation for the permutohedral lattice of the iterative
@@ -282,15 +280,13 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		// preparing contour image for debugging if srcImg!=null
 		int contourImgOffset = 0;
 		if (srcImg != null && m_contourImg == null) {
-			m_contourImg = new ArrayImgFactory().create(new int[] {
-					RADIUS * 2 + 1, extP.length() }, srcImg.firstElement()
-					.createVariable());
+			m_contourImg = new ArrayImgFactory().create(new int[] { RADIUS * 2 + 1, extP.length() },
+					srcImg.firstElement().createVariable());
 		} else if (m_contourImg != null) {
 			Img<T> tmp = m_contourImg.copy();
 			contourImgOffset = (int) tmp.dimension(1);
-			m_contourImg = new ArrayImgFactory().create(new int[] {
-					RADIUS * 2 + 1, contourImgOffset + extP.length() }, srcImg
-					.firstElement().createVariable());
+			m_contourImg = new ArrayImgFactory().create(new int[] { RADIUS * 2 + 1, contourImgOffset + extP.length() },
+					srcImg.firstElement().createVariable());
 			Cursor<T> tmpCur = tmp.cursor();
 			Cursor<T> contourImgCur = m_contourImg.cursor();
 			while (tmpCur.hasNext()) {
@@ -305,12 +301,9 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		if (m_contourImg != null) {
 			T type = m_contourImg.firstElement().createVariable();
 			type.setReal(0);
-			contourImgRA = Views.extend(m_contourImg,
-					new OutOfBoundsConstantValueFactory<T, Img<T>>(type))
+			contourImgRA = Views.extend(m_contourImg, new OutOfBoundsConstantValueFactory<T, Img<T>>(type))
 					.randomAccess();
-			srcImgRA = Views.extend(srcImg,
-					new OutOfBoundsConstantValueFactory<T, Img<T>>(type))
-					.randomAccess();
+			srcImgRA = Views.extend(srcImg, new OutOfBoundsConstantValueFactory<T, Img<T>>(type)).randomAccess();
 		}
 
 		// collect data, each point on the contour is a new instance
@@ -320,11 +313,9 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		// closer neighbourhood of RADIUS)
 		double[][][] cData = new double[extP.length()][RADIUS * 2 + 1][];
 		for (int j = 0; j < extP.length(); j++) {
-			int[][] line = PolygonTools.getLineAt(extP.getPointAt(j),
-					extP.getNormalVecAtPoint(j), RADIUS);
+			int[][] line = PolygonTools.getLineAt(extP.getPointAt(j), extP.getNormalVecAtPoint(j), RADIUS);
 			long[] pos = new long[2];
-			Dart dart = new Dart2D(pos, extP.getAngleAtPoint(j),
-					m_featSet.numAngles());
+			Dart dart = new Dart2D(pos, extP.getAngleAtPoint(j), m_featSet.numAngles());
 			// m_featFac.updateFeatureTarget(extP.getAngleAtPoint(j));
 			for (int k = 0; k < line.length; k++) {
 
@@ -390,18 +381,14 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		}
 	}
 
-	public void addSamples(IterableRegionOfInterest roi, int width, int height,
-			Img<T> srcImg) {
+	public void addSamples(IterableRegionOfInterest roi, int width, int height, Img<T> srcImg) {
 
 		// roi iterable interval
 		IterableInterval<BitType> ii = roi
-				.getIterableIntervalOverROI(ConstantUtils
-						.constantRandomAccessible(new BitType(),
-								roi.numDimensions()));
+				.getIterableIntervalOverROI(ConstantUtils.constantRandomAccessible(new BitType(), roi.numDimensions()));
 
 		// create bitmask
-		Img<BitType> bitmask = new ArrayImgFactory<BitType>().create(ii,
-				new BitType());
+		Img<BitType> bitmask = new ArrayImgFactory<BitType>().create(ii, new BitType());
 
 		int[] offset = new int[roi.numDimensions()];
 		for (int o = 0; o < offset.length; o++) {
@@ -417,8 +404,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 			}
 			ra.get().set(true);
 		}
-		addSamples(PolygonTools.extractPolygon(bitmask, offset), width, height,
-				srcImg);
+		addSamples(PolygonTools.extractPolygon(bitmask, offset), width, height, srcImg);
 	}
 
 	/**
@@ -468,26 +454,21 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 
 	protected void unmodifiedContourData() throws Exception {
 		m_contourData = new ContourDataExtractor() {
-			protected void extractContourData(int[] translations,
-					int[] permutation) {
+			protected void extractContourData(int[] translations, int[] permutation) {
 				Arrays.fill(translations, 0);
 
 			}
 		};
 		SimpleKMeans clusterer = new SimpleKMeans();
 		int clustersPerSample = 2;
-		clusterer.setNumClusters(clustersPerSample
-				* m_contourDataGrid.numSamples());
-		m_classifier = new WekaContourDataClassifier(m_wekaClassifier,
-				m_contourData, clusterer);
+		clusterer.setNumClusters(clustersPerSample * m_contourDataGrid.numSamples());
+		m_classifier = new WekaContourDataClassifier(m_wekaClassifier, m_contourData, clusterer);
 		m_classifier.buildClassifier(m_contourDataGrid, m_bgData);
 		m_contourModels = new double[1][m_contourDataGrid.numClusters() + 1];
-		m_contourModels = new double[m_contourData.numSamples()][m_contourData
-				.numClusters()];
+		m_contourModels = new double[m_contourData.numSamples()][m_contourData.numClusters()];
 		for (int i = 0; i < m_contourData.numVectors(); i++) {
 			if (m_contourData.weight(i) > 0)
-				m_contourModels[m_contourData.getSampleIndex(i)][m_contourData
-						.getClusterIdx(i)] = 1.0;
+				m_contourModels[m_contourData.getSampleIndex(i)][m_contourData.getClusterIdx(i)] = 1.0;
 		}
 		removeRedundantContourModels();
 	}
@@ -504,20 +485,14 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		// m_contourData = new ContourDataFromCRFNaive();
 		SimpleKMeans clusterer = new SimpleKMeans();
 		double clustersPerSample = 1;
-		clusterer.setNumClusters(Math.max(
-				1,
-				(int) Math.round(clustersPerSample
-						* m_contourDataGrid.numSamples())));
+		clusterer.setNumClusters(Math.max(1, (int) Math.round(clustersPerSample * m_contourDataGrid.numSamples())));
 
-		m_classifier = new WekaContourDataClassifier(m_wekaClassifier,
-				m_contourData, clusterer);
+		m_classifier = new WekaContourDataClassifier(m_wekaClassifier, m_contourData, clusterer);
 		m_classifier.buildClassifier(m_contourDataGrid, m_bgData);
-		m_contourModels = new double[m_contourData.numSamples()][m_contourData
-				.numClusters()];
+		m_contourModels = new double[m_contourData.numSamples()][m_contourData.numClusters()];
 		for (int i = 0; i < m_contourData.numVectors(); i++) {
 			if (m_contourData.weight(i) > 0)
-				m_contourModels[m_contourData.getSampleIndex(i)][m_contourData
-						.getClusterIdx(i)] = 1.0;
+				m_contourModels[m_contourData.getSampleIndex(i)][m_contourData.getClusterIdx(i)] = 1.0;
 		}
 		removeRedundantContourModels();
 
@@ -546,28 +521,21 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		m_contourData = new ContourDataFromIRI(miClass);
 		// m_contourData.extractContourData(m_contourDataGrid);
 		//
-		new WekaMIContourDataClassifier(miClass).buildClassifier(
-				m_contourDataGrid, m_bgData);
+		new WekaMIContourDataClassifier(miClass).buildClassifier(m_contourDataGrid, m_bgData);
 
 		/*
 		 * use the extracted contour data to feed a weka classifier
 		 */
 		SimpleKMeans clusterer = new SimpleKMeans();
 		double clustersPerSample = 1;
-		clusterer.setNumClusters(Math.max(
-				1,
-				(int) Math.round(clustersPerSample
-						* m_contourDataGrid.numSamples())));
+		clusterer.setNumClusters(Math.max(1, (int) Math.round(clustersPerSample * m_contourDataGrid.numSamples())));
 
-		m_classifier = new WekaContourDataClassifier(m_wekaClassifier,
-				m_contourData, clusterer);
+		m_classifier = new WekaContourDataClassifier(m_wekaClassifier, m_contourData, clusterer);
 		m_classifier.buildClassifier(m_contourDataGrid, m_bgData);
-		m_contourModels = new double[m_contourData.numSamples()][m_contourData
-				.numClusters()];
+		m_contourModels = new double[m_contourData.numSamples()][m_contourData.numClusters()];
 		for (int i = 0; i < m_contourData.numVectors(); i++) {
 			if (m_contourData.weight(i) > 0)
-				m_contourModels[m_contourData.getSampleIndex(i)][m_contourData
-						.getClusterIdx(i)] = 1.0;
+				m_contourModels[m_contourData.getSampleIndex(i)][m_contourData.getClusterIdx(i)] = 1.0;
 		}
 		removeRedundantContourModels();
 
@@ -624,8 +592,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 			bias = Double.valueOf(val);
 		}
 		m_contourData = new ContourDataFromClusterSelection(10, .9, bias);
-		m_classifier = new WekaContourDataClassifier(m_wekaClassifier,
-				m_contourData, null);
+		m_classifier = new WekaContourDataClassifier(m_wekaClassifier, m_contourData, null);
 		m_classifier.buildClassifier(m_contourDataGrid, m_bgData);
 		m_contourModels = new double[1][m_contourDataGrid.numClusters() + 1];
 		Arrays.fill(m_contourModels[0], 1);
@@ -656,14 +623,12 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 	 * 
 	 * @throws Exception
 	 */
-	public Img<ByteType> classifyImage(int[] offset, int[] size)
-			throws Exception {
+	public Img<ByteType> classifyImage(int[] offset, int[] size) throws Exception {
 
 		isFeatureSetSet();
 
 		if (m_classifier == null) {
-			throw new IllegalStateException(
-					"The boundary model wasn't build, yet!");
+			throw new IllegalStateException("The boundary model wasn't build, yet!");
 		}
 
 		ImgFactory<ByteType> imgFac = new ArrayImgFactory<ByteType>();
@@ -673,9 +638,8 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		resImgSize[2] = m_featSet.numAngles();
 		Img<ByteType> res = imgFac.create(resImgSize, new ByteType());
 
-		new UnaryConstantRightAssignment<ByteType, ByteType, ByteType>(
-				new RealCopyLeft<ByteType, ByteType, ByteType>()).compute(res,
-				new ByteType(Byte.MIN_VALUE), res);
+		new UnaryConstantRightAssignment<ByteType, ByteType, ByteType>(new RealCopyLeft<ByteType, ByteType, ByteType>())
+				.compute(res, new ByteType(Byte.MIN_VALUE), res);
 
 		Cursor<ByteType> resCur = res.localizingCursor();
 
@@ -699,9 +663,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 			for (int i = 0; i < distr.length; i++) {
 				prob = Math.max(prob, distr[i]);
 			}
-			resCur.get().set(
-					(byte) Math.max((byte) Math.round(prob * 255.0 - 128.0),
-							resCur.get().get()));
+			resCur.get().set((byte) Math.max((byte) Math.round(prob * 255.0 - 128.0), resCur.get().get()));
 
 		}
 
@@ -717,14 +679,12 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 	 * @return an image for each contour model
 	 * @throws Exception
 	 */
-	public Img<ByteType>[] classifyImageContourModelwise(final int[] offset,
-			final Img<BitType> mask) throws Exception {
+	public Img<ByteType>[] classifyImageContourModelwise(final int[] offset, final Img<BitType> mask) throws Exception {
 
 		isFeatureSetSet();
 
 		if (m_classifier == null) {
-			throw new IllegalStateException(
-					"The boundary model wasn't build, yet!");
+			throw new IllegalStateException("The boundary model wasn't build, yet!");
 		}
 
 		ImgFactory<ByteType> imgFac = new ArrayImgFactory<ByteType>();
@@ -752,8 +712,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		// ExecutorService pool =
 		// Executors.newFixedThreadPool(Runtime.getRuntime()
 		// .availableProcessors() - 2);
-		ExecutorService pool = Executors.newFixedThreadPool(Runtime
-				.getRuntime().availableProcessors() + 1);
+		ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
 
 		final ContourDataClassifier c = m_classifier;
 
@@ -779,16 +738,10 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 						curPoolCopy.fwd();
 						maskCur.fwd();
 						if (maskCur.get().get()) {
-							pos[0] = offset[0]
-									+ curPoolCopy.get(0).getLongPosition(0);
-							pos[1] = offset[1]
-									+ curPoolCopy.get(0).getLongPosition(1);
-							if (dart == null
-									|| curPoolCopy.get(0).getLongPosition(2) != dart
-											.directionIndex()) {
-								dart = new Dart2D(pos, curPoolCopy.get(0)
-										.getIntPosition(2), m_featSet
-										.numAngles());
+							pos[0] = offset[0] + curPoolCopy.get(0).getLongPosition(0);
+							pos[1] = offset[1] + curPoolCopy.get(0).getLongPosition(1);
+							if (dart == null || curPoolCopy.get(0).getLongPosition(2) != dart.directionIndex()) {
+								dart = new Dart2D(pos, curPoolCopy.get(0).getIntPosition(2), m_featSet.numAngles());
 
 							}
 							featSetCopy.updateDart(dart);
@@ -806,14 +759,9 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 							for (int m = 0; m < getNumModels(); m++) {
 								prob = 0;
 								for (int d = 0; d < distr.length; d++) {
-									prob = Math.max(prob, distr[d]
-											* m_contourModels[m][d]);
+									prob = Math.max(prob, distr[d] * m_contourModels[m][d]);
 								}
-								curPoolCopy
-										.get(m)
-										.get()
-										.set((byte) Math
-												.round(prob * 255.0 - 128.0));
+								curPoolCopy.get(m).get().set((byte) Math.round(prob * 255.0 - 128.0));
 							}
 						}
 					}
@@ -873,35 +821,27 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		if (m_contourData == null && m_contourImg != null) {
 
 			// // create image producer
-			Img<ByteType> img = new ArrayImgFactory<ByteType>().create(
-					new int[] { m_contourDataGrid.width(),
-							m_contourDataGrid.totalLength() }, new ByteType());
+			Img<ByteType> img = new ArrayImgFactory<ByteType>()
+					.create(new int[] { m_contourDataGrid.width(), m_contourDataGrid.totalLength() }, new ByteType());
 			// return new GreyImgRenderer<ByteType>().render(img, 0, 1,
 			// new long[2], 1);
-			m_debugImageProducer = new ShowInSameFrame.ImagePlaneProducer<ByteType>(
-					img);
-			m_contourDataGrid.setContourDebugImage(m_debugImageProducer,
-					m_contourImg);
-			return Toolkit.getDefaultToolkit()
-					.createImage(m_debugImageProducer);
+			m_debugImageProducer = new ShowInSameFrame.ImagePlaneProducer<ByteType>(img);
+			m_contourDataGrid.setContourDebugImage(m_debugImageProducer, m_contourImg);
+			return Toolkit.getDefaultToolkit().createImage(m_debugImageProducer);
 		} else if (m_contourImg != null) {
-			res = new BufferedImage(m_contourDataGrid.width() * 2,
-					m_contourDataGrid.totalLength(), BufferedImage.TYPE_INT_RGB);
+			res = new BufferedImage(m_contourDataGrid.width() * 2, m_contourDataGrid.totalLength(),
+					BufferedImage.TYPE_INT_RGB);
 			java.awt.Graphics g = res.getGraphics();
 
 			Img img = m_contourData.transformContourImage(m_contourImg);
 			RandomAccessibleInterval<LabelingType<Integer>> lab = m_contourData
 					.clusterDistrLabeling(BG_CLUSTER_IDX_FOR_DEBUG);
-			g.drawImage(
-					new Real2GreyRenderer<T>().render(img, 0, 1, new long[2])
-							.image(), 0, 0, null);
+			g.drawImage(new Real2GreyRenderer<T>(0).render(img, 0, 1, new long[2]).image(), 0, 0, null);
 			ColorLabelingRenderer<Integer> labRend = new ColorLabelingRenderer<Integer>();
-			labRend.setLabelingColorTable(new ExtendedLabelingColorTable(
-					new DefaultLabelingColorTable(),
-					new RandomMissingColorHandler()));
+			labRend.setLabelingColorTable(
+					new ExtendedLabelingColorTable(new DefaultLabelingColorTable(), new RandomMissingColorHandler()));
 			labRend.setLabelMapping(Util.getTypeFromInterval(lab).getMapping());
-			g.drawImage(labRend.render(lab, 0, 1, new long[2]).image(),
-					m_contourDataGrid.width(), 0, null);
+			g.drawImage(labRend.render(lab, 0, 1, new long[2]).image(), m_contourDataGrid.width(), 0, null);
 		}
 		return res;
 	}
@@ -951,8 +891,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 	private double calcLMDL(double epsilon) {
 
 		// create sample matrix
-		Matrix V = new Matrix(m_contourData.numFeatures(),
-				m_contourData.numVectors());
+		Matrix V = new Matrix(m_contourData.numFeatures(), m_contourData.numVectors());
 
 		double[] vec;
 		for (int i = 0; i < m_contourData.numVectors(); i++) {
@@ -965,15 +904,11 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 		// estimate of the covariance matrix
 		Matrix W = V.times(V.transpose());
 
-		W.times(m_contourData.numFeatures()
-				/ (epsilon * epsilon * m_contourData.numVectors()));
+		W.times(m_contourData.numFeatures() / (epsilon * epsilon * m_contourData.numVectors()));
 
-		W = Matrix.identity(m_contourData.numFeatures(),
-				m_contourData.numFeatures()).plus(W);
+		W = Matrix.identity(m_contourData.numFeatures(), m_contourData.numFeatures()).plus(W);
 
-		return Utils.log2(W.det())
-				* (m_contourData.numFeatures() + m_contourData.numVectors())
-				/ 2;
+		return Utils.log2(W.det()) * (m_contourData.numFeatures() + m_contourData.numVectors()) / 2;
 
 	}
 
@@ -1032,8 +967,7 @@ public class BoundaryModel<T extends RealType<T>, F extends RealType<F>>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		// m_numUniverses = in.readInt();
 		// m_classifiers = new OneClassClassifier[m_numUniverses];
 		// // m_posDistr = new EM[m_numUniverses];
