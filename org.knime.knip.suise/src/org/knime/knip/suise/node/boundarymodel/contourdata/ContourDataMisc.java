@@ -68,11 +68,11 @@ import net.imglib2.util.Pair;
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.optimization.fitting.CurveFitter;
 import org.apache.commons.math3.optimization.general.LevenbergMarquardtOptimizer;
+import org.knime.core.node.NodeLogger;
 import org.knime.knip.core.awt.AWTImageTools;
 import org.knime.knip.core.data.labeling.Signature;
 import org.knime.knip.core.util.PermutationSort;
 import org.knime.knip.core.util.ShowInSameFrame;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -869,7 +869,7 @@ public class ContourDataMisc extends ContourDataExtractor {
                 // if (Math.abs(res[0] - res[res.length - 1]) <=
                 // maxLineVariance) {
                 if (Math.abs(lastDir - firstDir) <= maxLineVariance) {
-                    LoggerFactory.getLogger(Signature.class).debug(
+                    NodeLogger.getLogger(Signature.class).debug(
                             "alternative backtrack: " + l);
                     // AWTImageTools.showInFrame(m_tmp,
                     // "alt. backtrack");
