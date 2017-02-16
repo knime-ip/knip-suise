@@ -18,10 +18,7 @@ Require-Bundle: org.knime.base;bundle-version="3.0.0",
  ij;bundle-version="1.49.0",
  imglib2-ij;bundle-version="2.0.0",
  org.apache.commons.math3;bundle-version="3.2.0",
- scijava-log-slf4j;bundle-version="1.0.2",
  knip-tmp-imglib2-ops;bundle-version="0.1.4",
- slf4j-api;bundle-version="1.7.10",
- slf4j-log4j12;bundle-version="1.7.10",
  imagej-ops;bundle-version="0.16.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: knip_suise.jar,
